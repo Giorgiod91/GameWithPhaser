@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
 import Phaser from "phaser";
-//phaser codesnipet
 
 const PhaserGame = () => {
   useEffect(() => {
@@ -14,12 +13,15 @@ const PhaserGame = () => {
       },
       create: function () {
         this.add.image(400, 300, "sky");
-        const logo = this.physics.add.image(400, 300, "logo");
+        const logo = this.physics.add.image(60, 60, "logo");
         logo.setScale(0.2);
-        logo.setVelocity(100, 200);
+        logo.setVelocity(100, 100);
         logo.setBounce(1, 1);
         logo.setInteractive();
-        logo.on("pointerdown", () => {
+        this.spaceKey = this.input.keyboard.addKey(
+          Phaser.Input.Keyboard.KeyCodes.SPACE,
+        );
+        this.spaceKey.on("down", () => {
           logo.setY(100);
         });
       },
@@ -35,7 +37,7 @@ const PhaserGame = () => {
       physics: {
         default: "arcade",
         arcade: {
-          gravity: { y: 100 },
+          gravity: { y: 50 },
         },
       },
     };
