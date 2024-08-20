@@ -16,6 +16,19 @@ const PhaserGame = () => {
       create: function () {
         this.add.image(400, 300, "sky");
 
+        // create button to restart
+        const restartButton = this.add.text(400, 300, "Restart", {
+          backgroundColor: "white",
+          color: "black",
+          padding: 10,
+        });
+        restartButton.setInteractive();
+        restartButton.on("pointerdown", () => {
+          setGameOver(false);
+        });
+        restartButton.setVisible(false);
+        this.restartButton = restartButton;
+
         // Create the player sprite
         const player = this.physics.add.image(400, 500, "player");
         player.setScale(0.2);
@@ -53,9 +66,9 @@ const PhaserGame = () => {
           if (!gameOver) {
             setGameOver(true);
           }
-          if (gameOver) {
-            setGameOver(false);
-          }
+        }
+        if (this.restartButton) {
+          this.restartButton.setVisible(gameOver);
         }
       },
       cursors: null,
@@ -89,9 +102,14 @@ const PhaserGame = () => {
   return (
     <div>
       <div id="phaser-game-container"></div>
-      {gameOver && (
+      {gameOver ? (
         <div>
-          <h1>You Lose</h1>
+          <h1>LOOSE</h1>
+          <button onClick={() => setGameOver(false)}>Try Again</button>
+        </div>
+      ) : (
+        <div>
+          <h1>Game is Running</h1>
         </div>
       )}
     </div>
