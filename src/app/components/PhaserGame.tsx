@@ -76,11 +76,10 @@ const PhaserGame = () => {
           cactus.setVelocityX(-100);
 
           // Reset cactus position
-          if (cactus.x < -50) {
-            cactus.x = 850;
+          if (cactus.x < 50) {
+            cactus.x = 800;
           }
         });
-
         // Stop player movement if no key is pressed
         this.player.setVelocityX(0);
 
