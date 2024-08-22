@@ -14,6 +14,7 @@ const PhaserGame = () => {
         this.load.image("player", "/assets/p3_stand.png");
         this.load.image("cloud1", "/assets/items/cloud1.png");
         this.load.image("cactus", "/assets/items/cactus.png");
+        this.load.image("box", "/assets/mapImages/box.png");
       },
       create: function () {
         const background = this.add.image(400, 300, "sky");
@@ -29,6 +30,18 @@ const PhaserGame = () => {
           cactus.setScale(0.5);
           cactus.setCollideWorldBounds(true);
           this.manyCactus.push(cactus);
+        }
+        // Create the box objects
+        this.manyBox = [];
+        for (let i = 0; i < 10; i++) {
+          const x = 600 + i * 300;
+          const y = Phaser.Math.Between(50, 400); // Random y position
+          const box = this.physics.add.image(x, y, "box");
+          box.setScale(0.5);
+          box.setCollideWorldBounds(true);
+          box.body.allowGravity = false; // pretending that the box is floating to the ground
+          box.body.immovable = true;
+          this.manyBox.push(box);
         }
 
         // Create the clouds in the background
@@ -57,6 +70,9 @@ const PhaserGame = () => {
         this.physics.add.collider(this.player, this.manyCactus, () => {
           setGameOver(true); // Game over when player collides with any cactus
         });
+
+        // Add collision between player and boxes
+        this.physics.add.collider(this.player, this.manyBox);
 
         // Create button to restart
         this.restartButton = this.add.text(400, 300, "Restart", {
@@ -96,14 +112,14 @@ const PhaserGame = () => {
         }
 
         // Loose changing state to simulate a game over
-        if (this.player.x > 600 || this.player.x < 200) {
-          if (!gameOver) {
-            setGameOver(true);
-          }
-        }
-        if (this.restartButton) {
-          this.restartButton.setVisible(gameOver);
-        }
+        // if (this.player.x > 600 || this.player.x < 200) {
+        //   if (!gameOver) {
+        //    setGameOver(true);
+        //   }
+        // }
+        //  if (this.restartButton) {
+        //    this.restartButton.setVisible(gameOver);
+        //  }
       },
     };
 
