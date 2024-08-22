@@ -34,8 +34,8 @@ const PhaserGame = () => {
         // Create the box objects
         this.manyBox = [];
         for (let i = 0; i < 10; i++) {
-          const x = 600 + i * 300;
-          const y = Phaser.Math.Between(50, 400); // Random y position
+          const x = Phaser.Math.Between(50, 750); // Random x
+          const y = Phaser.Math.Between(50, 600); // Random y
           const box = this.physics.add.image(x, y, "box");
           box.setScale(0.5);
           box.setCollideWorldBounds(true);
@@ -53,6 +53,13 @@ const PhaserGame = () => {
         this.player = this.physics.add.image(400, 500, "player");
         this.player.setScale(0.5);
         this.player.setCollideWorldBounds(true);
+
+        // create plater boost
+        this.boost = 0;
+
+        // add the max jump count
+        this.howManyJumps = 0;
+        this.maxJumps = 2;
 
         // Enable gravity for the player
         this.player.body.allowGravity = true;
@@ -96,6 +103,13 @@ const PhaserGame = () => {
             cactus.x = 800;
           }
         });
+        // create player boost
+        //::TODO: add boost to player when player collides with box and make i usable only once
+
+        if (this.boost > 0) {
+          this.player.setVelocityY(-100);
+          this.boost -= 1;
+        }
         // Stop player movement if no key is pressed
         this.player.setVelocityX(0);
 
@@ -106,12 +120,20 @@ const PhaserGame = () => {
           this.player.setVelocityX(150);
         }
 
-        // Jump
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-          this.player.setVelocityY(-300);
+          if (this.howManyJumps < this.maxJumps) {
+            this.player.setVelocityY(-300);
+            this.howManyJumps++;
+          }
         }
 
-        // Loose changing state to simulate a game over
+        // Reset jump count when player touches the ground
+
+        if (this.player.body.blocked.down) {
+          this.howManyJumps = 0;
+        }
+
+        // gamover condition
         // if (this.player.x > 600 || this.player.x < 200) {
         //   if (!gameOver) {
         //    setGameOver(true);
