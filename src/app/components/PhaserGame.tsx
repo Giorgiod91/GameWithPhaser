@@ -25,21 +25,35 @@ const PhaserGame = () => {
 
         // Create the cactus objects with dynamic physics
         this.manyCactus = [];
-        for (let i = 0; i < 10; i++) {
-          const cactus = this.physics.add.image(600 + i * 300, 500, "cactus");
+        const usedXPositions = new Set();
+
+        // codesnipet i copied to generate unique x positions for cactus
+        const generateUniqueX = () => {
+          let x;
+          do {
+            x = Phaser.Math.Between(50, 750);
+          } while (usedXPositions.has(x));
+          usedXPositions.add(x);
+          return x;
+        };
+
+        for (let i = 0; i < 5; i++) {
+          const x = generateUniqueX();
+          const cactus = this.physics.add.image(x, 500, "cactus");
           cactus.setScale(0.5);
           cactus.setCollideWorldBounds(true);
           this.manyCactus.push(cactus);
         }
+
         // Create the box objects
         this.manyBox = [];
         for (let i = 0; i < 10; i++) {
-          const x = Phaser.Math.Between(50, 750); // Random x
-          const y = Phaser.Math.Between(50, 600); // Random y
+          const x = Phaser.Math.Between(50, 750);
+          const y = Phaser.Math.Between(50, 600);
           const box = this.physics.add.image(x, y, "box");
           box.setScale(0.5);
           box.setCollideWorldBounds(true);
-          box.body.allowGravity = false; // pretending that the box is floating to the ground
+          box.body.allowGravity = false;
           box.body.immovable = true;
           this.manyBox.push(box);
         }
@@ -54,10 +68,8 @@ const PhaserGame = () => {
         this.player.setScale(0.5);
         this.player.setCollideWorldBounds(true);
 
-        // create plater boost
+        // Create player boost
         this.boost = 0;
-
-        // add the max jump count
         this.howManyJumps = 0;
         this.maxJumps = 2;
 
@@ -69,8 +81,6 @@ const PhaserGame = () => {
 
         // Add keyboard inputs for movement
         this.cursors = this.input.keyboard.createCursorKeys();
-
-        // Spacebar jump
         this.spaceKey = this.cursors.space;
 
         // Add collision between player and cactus
@@ -103,13 +113,23 @@ const PhaserGame = () => {
             cactus.x = 800;
           }
         });
-        // create player boost
-        //::TODO: add boost to player when player collides with box and make i usable only once
 
+        // Check for duplicate x positions and remove duplicates
+        const seenXPositions = new Set();
+        this.manyCactus.forEach((cactus) => {
+          if (seenXPositions.has(cactus.x)) {
+            cactus.destroy(); // Remove cactus with duplicate x position
+          } else {
+            seenXPositions.add(cactus.x);
+          }
+        });
+
+        // Create player boost
         if (this.boost > 0) {
           this.player.setVelocityY(-100);
           this.boost -= 1;
         }
+
         // Stop player movement if no key is pressed
         this.player.setVelocityX(0);
 
@@ -120,6 +140,7 @@ const PhaserGame = () => {
           this.player.setVelocityX(150);
         }
 
+        // Spacebar jump
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
           if (this.howManyJumps < this.maxJumps) {
             this.player.setVelocityY(-300);
@@ -128,20 +149,20 @@ const PhaserGame = () => {
         }
 
         // Reset jump count when player touches the ground
-
         if (this.player.body.blocked.down) {
           this.howManyJumps = 0;
         }
 
-        // gamover condition
-        // if (this.player.x > 600 || this.player.x < 200) {
-        //   if (!gameOver) {
-        //    setGameOver(true);
-        //   }
-        // }
-        //  if (this.restartButton) {
-        //    this.restartButton.setVisible(gameOver);
-        //  }
+        // Optional: Game over conditions and restart button visibility
+        if (gameOver) {
+          if (this.restartButton) {
+            this.restartButton.setVisible(true);
+          }
+        } else {
+          if (this.restartButton) {
+            this.restartButton.setVisible(false);
+          }
+        }
       },
     };
 
