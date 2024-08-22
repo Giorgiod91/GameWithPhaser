@@ -1,68 +1,103 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Phaser from "phaser";
-import { endianness } from "os";
 
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
+
   useEffect(() => {
     let gameInstance;
 
     const sceneConfig = {
       preload: function () {
-        this.load.image("sky", "/assets/damn.png");
-        this.load.image("player", "/assets/player.jpg");
+        this.load.image("sky", "/assets/mapbg/bg.png");
+        this.load.image("player", "/assets/p3_stand.png");
+        this.load.image("cloud1", "/assets/items/cloud1.png");
+        this.load.image("cactus", "/assets/items/cactus.png");
       },
       create: function () {
-        this.add.image(400, 300, "sky");
+        const background = this.add.image(400, 300, "sky");
+        background.setDisplaySize(
+          this.sys.game.config.width,
+          this.sys.game.config.height,
+        );
 
-        // create button to restart
-        const restartButton = this.add.text(400, 300, "Restart", {
-          backgroundColor: "white",
-          color: "black",
-          padding: 10,
-        });
-        restartButton.setInteractive();
-        restartButton.on("pointerdown", () => {
-          setGameOver(false);
-        });
-        restartButton.setVisible(false);
-        this.restartButton = restartButton;
+        // Create the cactus objects with dynamic physics
+        this.manyCactus = [];
+        for (let i = 0; i < 10; i++) {
+          const cactus = this.physics.add.image(600 + i * 300, 500, "cactus");
+          cactus.setScale(0.5);
+          cactus.setCollideWorldBounds(true);
+          this.manyCactus.push(cactus);
+        }
+
+        // Create the clouds in the background
+        this.add.image(200, 100, "cloud1");
+        this.add.image(400, 90, "cloud1");
+        this.add.image(600, 80, "cloud1");
 
         // Create the player sprite
-        const player = this.physics.add.image(400, 500, "player");
-        player.setScale(0.2);
-        player.setCollideWorldBounds(true);
+        this.player = this.physics.add.image(400, 500, "player");
+        this.player.setScale(0.5);
+        this.player.setCollideWorldBounds(true);
 
-        // Enable gravity
-        player.body.allowGravity = true;
+        // Enable gravity for the player
+        this.player.body.allowGravity = true;
 
         // Set initial velocity to zero
-        player.setVelocity(0, 0);
+        this.player.setVelocity(0, 0);
 
         // Add keyboard inputs for movement
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // Spacebar jump
         this.spaceKey = this.cursors.space;
+
+        // Add collision between player and cactus
+        this.physics.add.collider(this.player, this.manyCactus, () => {
+          setGameOver(true); // Game over when player collides with any cactus
+        });
+
+        // Create button to restart
+        this.restartButton = this.add.text(400, 300, "Restart", {
+          backgroundColor: "white",
+          color: "black",
+          padding: 10,
+        });
+        this.restartButton.setInteractive();
+        this.restartButton.on("pointerdown", () => {
+          setGameOver(false);
+        });
+        this.restartButton.setVisible(false);
       },
       update: function () {
-        const player = this.physics.world.bodies.entries[0].gameObject;
-        player.setVelocityX(0);
+        // Move each cactus to the left
+        this.manyCactus.forEach((cactus) => {
+          cactus.setVelocityX(-100);
 
-        // Horizontal movement
+          // Reset cactus position
+          if (cactus.x < -50) {
+            cactus.x = 850;
+          }
+        });
+
+        // Stop player movement if no key is pressed
+        this.player.setVelocityX(0);
+
+        // Horizontal movement for player
         if (this.cursors.left.isDown) {
-          player.setVelocityX(-150);
+          this.player.setVelocityX(-150);
         } else if (this.cursors.right.isDown) {
-          player.setVelocityX(150);
+          this.player.setVelocityX(150);
         }
+
         // Jump
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-          player.setVelocityY(-300);
+          this.player.setVelocityY(-300);
         }
 
-        // Loose chaning state to simulate a game over
-        if (player.x > 600 || player.x < 200) {
+        // Loose changing state to simulate a game over
+        if (this.player.x > 600 || this.player.x < 200) {
           if (!gameOver) {
             setGameOver(true);
           }
@@ -71,15 +106,12 @@ const PhaserGame = () => {
           this.restartButton.setVisible(gameOver);
         }
       },
-      cursors: null,
-      spaceKey: null as Phaser.Input.Keyboard.Key | null,
     };
 
     const config = {
       type: Phaser.AUTO,
       width: 800,
       height: 600,
-
       parent: "phaser-game-container",
       scene: sceneConfig,
       physics: {
