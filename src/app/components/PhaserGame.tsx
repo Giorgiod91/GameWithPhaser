@@ -15,6 +15,7 @@ const PhaserGame = () => {
         this.load.image("cloud1", "/assets/items/cloud1.png");
         this.load.image("cactus", "/assets/items/cactus.png");
         this.load.image("box", "/assets/mapImages/box.png");
+        this.load.image("coin", "/assets/items/coinGold.png");
       },
       create: function () {
         const background = this.add.image(400, 300, "sky");
@@ -22,6 +23,18 @@ const PhaserGame = () => {
           this.sys.game.config.width,
           this.sys.game.config.height,
         );
+        //create the coins and set the physics
+        this.manyCoins = [];
+        for (let i = 0; i < 5; i++) {
+          const x = Phaser.Math.Between(50, 750);
+          const y = Phaser.Math.Between(50, 600);
+          const coin = this.physics.add.image(x, y, "coin");
+          coin.setScale(0.5);
+          coin.setCollideWorldBounds(true);
+          coin.body.allowGravity = false;
+          coin.body.immovable = true;
+          this.manyCoins.push(coin);
+        }
 
         // Create the cactus objects with dynamic physics
         this.manyCactus = [];
@@ -56,6 +69,7 @@ const PhaserGame = () => {
           box.body.allowGravity = false;
           box.body.immovable = true;
           this.manyBox.push(box);
+          this.physics.add.collider(this.player, this.coin);
         }
 
         // Create the clouds in the background
@@ -152,9 +166,20 @@ const PhaserGame = () => {
         if (this.player.body.blocked.down) {
           this.howManyJumps = 0;
         }
+        // Check for player collision with coins and remove coins
+        this.manyCoins.forEach((coin) => {
+          if (
+            Phaser.Geom.Intersects.RectangleToRectangle(
+              this.player.getBounds(),
+              coin.getBounds(),
+            )
+          ) {
+            coin.destroy();
+          }
+        });
 
-        // Optional: Game over conditions and restart button visibility
         if (gameOver) {
+          // Optional: Game over conditions and restart button visibility
           if (this.restartButton) {
             this.restartButton.setVisible(true);
           }
