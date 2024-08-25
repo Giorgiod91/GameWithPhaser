@@ -1,10 +1,16 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
+import { motion } from "framer-motion";
+import { set } from "zod";
 //::TODO:: Add the ability to shoot projectiles
+//::TODO:: Add a power boost item that allows the player to jump higher or fly for a short period of time
+
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [coins, setCoins] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [switchPosition, setSwitchPosition] = useState(0);
 
   useEffect(() => {
     let gameInstance;
@@ -17,6 +23,7 @@ const PhaserGame = () => {
         this.load.image("cactus", "/assets/items/cactus.png");
         this.load.image("box", "/assets/mapImages/box.png");
         this.load.image("coin", "/assets/items/coinGold.png");
+        this.load.image("switch", "/assets/items/switchLeft.png");
       },
       create: function () {
         // defining the size of LVL1 map
@@ -51,6 +58,13 @@ const PhaserGame = () => {
           coin.body.immovable = true;
           this.manyCoins.push(coin);
         }
+        //::TODO:: make the switch to change position of the boxes
+        // Create the switch
+        this.switch = this.physics.add.image(50, 760, "switch");
+        this.switch.setScale(0.5);
+        this.switch.setCollideWorldBounds(true);
+        this.switch.body.allowGravity = false;
+        this.switchActivated = false;
 
         // Set camera bounds to the size of the world
         this.cameras.main.setBounds(0, 0, lvl1Width, lvl1Height);
@@ -96,7 +110,7 @@ const PhaserGame = () => {
         this.add.image(400, 90, "cloud1");
         this.add.image(600, 80, "cloud1");
 
-        // Create the player sprite
+        // Create the player
         this.player = this.physics.add.image(400, 500, "player");
         this.player.setScale(0.5);
         this.player.setCollideWorldBounds(true);
@@ -127,7 +141,7 @@ const PhaserGame = () => {
 
         // Create button to restart
       },
-      update: function () {
+      update: function (lvl1Width: number, lvl1Height: number) {
         // Move each cactus to the left
         this.manyCactus.forEach((cactus) => {
           cactus.setVelocityX(-100);
@@ -150,6 +164,18 @@ const PhaserGame = () => {
             seenXPositions.add(cactus.x);
           }
         });
+        // Check for player collision with switch then switch stuff around
+        if (
+          this.physics.overlap(this.player, this.switch) &&
+          !this.switchActivated
+        ) {
+          //  give the boxes new random positions
+
+          this.manyBox.forEach((box) => {
+            box.x = Phaser.Math.Between(50, lvl1Width);
+            this.switchActivated = true;
+          });
+        }
 
         // Create player boost
         if (this.boost > 0) {
@@ -232,7 +258,7 @@ const PhaserGame = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
       <h1 className="mb-6 text-3xl font-bold md:text-4xl">
-        Game made for fun! Collect all coins to advance to the next level.
+        Game made for fun! Collect 35 coins to get to the next level.
       </h1>
 
       <div id="phaser-game-container" className="relative mb-6">
