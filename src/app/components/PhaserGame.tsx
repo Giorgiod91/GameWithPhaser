@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Phaser from "phaser";
-
+//::TODO:: Add the ability to shoot projectiles
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [coins, setCoins] = useState(0);
@@ -170,8 +170,8 @@ const PhaserGame = () => {
         if (this.manyCoins) {
           this.manyCoins.forEach((coin) => {
             if (this.physics.overlap(this.player, coin)) {
+              setCoins((prevCoins) => prevCoins + 1);
               coin.destroy();
-              setCoins(coins + 1);
             }
           });
         }
@@ -180,6 +180,7 @@ const PhaserGame = () => {
           // Optional: Game over conditions and restart button visibility
           if (this.restartButton) {
             this.restartButton.setVisible(true);
+            setCoins(0);
           }
         } else {
           if (this.restartButton) {
