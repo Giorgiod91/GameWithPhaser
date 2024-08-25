@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Phaser from "phaser";
+import Phaser, { AUTO } from "phaser";
 //::TODO:: Add the ability to shoot projectiles
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
@@ -19,16 +19,31 @@ const PhaserGame = () => {
         this.load.image("coin", "/assets/items/coinGold.png");
       },
       create: function () {
-        const background = this.add.image(400, 300, "sky");
-        background.setDisplaySize(
+        // defining the size of LVL1 map
+
+        const lvl1Width = 4500;
+        const lvl1Height = 600;
+        // Create a movable background
+        this.background = this.add.tileSprite(
+          0,
+          0,
+          lvl1Width,
+          lvl1Height,
+          "sky",
+        );
+        this.background.setOrigin(0, 0);
+        this.background.setScrollFactor(0);
+
+        this.background.setDisplaySize(
           this.sys.game.config.width,
           this.sys.game.config.height,
         );
-        //create the coins and set the physics
+
+        // Create the coins and set the physics
         this.manyCoins = [];
-        for (let i = 0; i < 5; i++) {
-          const x = Phaser.Math.Between(50, 750);
-          const y = Phaser.Math.Between(50, 600);
+        for (let i = 0; i < 55; i++) {
+          const x = Phaser.Math.Between(50, lvl1Width);
+          const y = Phaser.Math.Between(50, lvl1Height);
           const coin = this.physics.add.image(x, y, "coin");
           coin.setScale(0.5);
           coin.setCollideWorldBounds(true);
@@ -37,21 +52,25 @@ const PhaserGame = () => {
           this.manyCoins.push(coin);
         }
 
+        // Set camera bounds to the size of the world
+        this.cameras.main.setBounds(0, 0, lvl1Width, lvl1Height);
+        this.physics.world.setBounds(0, 0, lvl1Width, lvl1Height);
+
         // Create the cactus objects with dynamic physics
         this.manyCactus = [];
         const usedXPositions = new Set();
 
-        // codesnipet i copied to generate unique x positions for cactus
+        // Function to generate unique x positions for cactus
         const generateUniqueX = () => {
           let x;
           do {
-            x = Phaser.Math.Between(600, 750);
+            x = Phaser.Math.Between(600, lvl1Width);
           } while (usedXPositions.has(x));
           usedXPositions.add(x);
           return x;
         };
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 25; i++) {
           const x = generateUniqueX();
           const cactus = this.physics.add.image(x, 500, "cactus");
           cactus.setScale(0.5);
@@ -61,9 +80,9 @@ const PhaserGame = () => {
 
         // Create the box objects
         this.manyBox = [];
-        for (let i = 0; i < 10; i++) {
-          const x = Phaser.Math.Between(50, 750);
-          const y = Phaser.Math.Between(50, 600);
+        for (let i = 0; i < 30; i++) {
+          const x = Phaser.Math.Between(50, lvl1Width);
+          const y = Phaser.Math.Between(50, lvl1Height);
           const box = this.physics.add.image(x, y, "box");
           box.setScale(0.5);
           box.setCollideWorldBounds(true);
@@ -81,6 +100,7 @@ const PhaserGame = () => {
         this.player = this.physics.add.image(400, 500, "player");
         this.player.setScale(0.5);
         this.player.setCollideWorldBounds(true);
+        this.cameras.main.startFollow(this.player);
 
         // Create player boost
         this.boost = 0;
@@ -106,16 +126,6 @@ const PhaserGame = () => {
         this.physics.add.collider(this.player, this.manyBox);
 
         // Create button to restart
-        this.restartButton = this.add.text(400, 300, "Restart", {
-          backgroundColor: "white",
-          color: "black",
-          padding: 10,
-        });
-        this.restartButton.setInteractive();
-        this.restartButton.on("pointerdown", () => {
-          setGameOver(false);
-        });
-        this.restartButton.setVisible(false);
       },
       update: function () {
         // Move each cactus to the left
@@ -127,6 +137,9 @@ const PhaserGame = () => {
             cactus.x = 800;
           }
         });
+
+        // Scroll the background based on the camera's scroll position
+        this.background.tilePositionX = this.cameras.main.scrollX;
 
         // Check for duplicate x positions and remove duplicates
         const seenXPositions = new Set();
@@ -166,6 +179,7 @@ const PhaserGame = () => {
         if (this.player.body.blocked.down) {
           this.howManyJumps = 0;
         }
+
         // Check for player collision with coins and remove coins
         if (this.manyCoins) {
           this.manyCoins.forEach((coin) => {
@@ -200,6 +214,8 @@ const PhaserGame = () => {
         default: "arcade",
         arcade: {
           gravity: { y: 500 },
+          width: 1600,
+          height: 600,
         },
       },
     };
@@ -214,18 +230,32 @@ const PhaserGame = () => {
   }, [gameOver]);
 
   return (
-    <div>
-      <div id="phaser-game-container">
-        <h1 className="text-7xl text-red-500">Coins: {coins}</h1>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
+      <h1 className="mb-6 text-3xl font-bold md:text-4xl">
+        Game made for fun! Collect all coins to advance to the next level.
+      </h1>
+
+      <div id="phaser-game-container" className="relative mb-6">
+        <h1 className="mb-2 text-3xl font-bold text-yellow-400 md:text-4xl">
+          Coins: {coins}
+        </h1>
       </div>
+
       {gameOver ? (
-        <div>
-          <h1>LOOSE</h1>
-          <button onClick={() => setGameOver(false)}>Try Again</button>
+        <div className="flex flex-col items-center">
+          <h1 className="mb-4 text-4xl font-bold text-red-500">Game Over</h1>
+          <button
+            onClick={() => setGameOver(false)}
+            className="rounded-lg bg-blue-500 px-6 py-2 font-semibold text-white shadow-md transition duration-300 hover:bg-blue-600"
+          >
+            Try Again
+          </button>
         </div>
       ) : (
-        <div>
-          <h1>Game is Running</h1>
+        <div className="flex flex-col items-center">
+          <h1 className="text-2xl font-medium text-gray-300">
+            Game is Running
+          </h1>
         </div>
       )}
     </div>
