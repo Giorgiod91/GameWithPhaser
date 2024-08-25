@@ -4,6 +4,7 @@ import Phaser from "phaser";
 
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
+  const [coins, setCoins] = useState(0);
 
   useEffect(() => {
     let gameInstance;
@@ -44,7 +45,7 @@ const PhaserGame = () => {
         const generateUniqueX = () => {
           let x;
           do {
-            x = Phaser.Math.Between(50, 750);
+            x = Phaser.Math.Between(600, 750);
           } while (usedXPositions.has(x));
           usedXPositions.add(x);
           return x;
@@ -69,7 +70,6 @@ const PhaserGame = () => {
           box.body.allowGravity = false;
           box.body.immovable = true;
           this.manyBox.push(box);
-          this.physics.add.collider(this.player, this.coin);
         }
 
         // Create the clouds in the background
@@ -167,16 +167,14 @@ const PhaserGame = () => {
           this.howManyJumps = 0;
         }
         // Check for player collision with coins and remove coins
-        this.manyCoins.forEach((coin) => {
-          if (
-            Phaser.Geom.Intersects.RectangleToRectangle(
-              this.player.getBounds(),
-              coin.getBounds(),
-            )
-          ) {
-            coin.destroy();
-          }
-        });
+        if (this.manyCoins) {
+          this.manyCoins.forEach((coin) => {
+            if (this.physics.overlap(this.player, coin)) {
+              coin.destroy();
+              setCoins(coins + 1);
+            }
+          });
+        }
 
         if (gameOver) {
           // Optional: Game over conditions and restart button visibility
@@ -216,7 +214,9 @@ const PhaserGame = () => {
 
   return (
     <div>
-      <div id="phaser-game-container"></div>
+      <div id="phaser-game-container">
+        <h1 className="text-7xl text-red-500">Coins: {coins}</h1>
+      </div>
       {gameOver ? (
         <div>
           <h1>LOOSE</h1>
