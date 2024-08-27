@@ -25,6 +25,7 @@ const PhaserGame = () => {
         this.load.image("box", "/assets/mapImages/box.png");
         this.load.image("coin", "/assets/items/coinGold.png");
         this.load.image("switch", "/assets/items/switchLeft.png");
+        this.load.image("mushroom", "/assets/items/mushroomRed.png");
       },
       create: function () {
         // defining the size of LVL1 map
@@ -46,7 +47,12 @@ const PhaserGame = () => {
           this.sys.game.config.width,
           this.sys.game.config.height,
         );
-
+        // creating the mushroom
+        var x = Phaser.Math.Between(50, lvl1Width);
+        var y = Phaser.Math.Between(50, lvl1Height);
+        this.mushroom = this.physics.add.image(x / 2, y, "mushroom");
+        this.mushroom.body.allowGravity = false;
+        this.mushroom.setCollideWorldBounds(true);
         // Create the coins and set the physics
         this.manyCoins = [];
         for (let i = 0; i < 55; i++) {
@@ -57,6 +63,7 @@ const PhaserGame = () => {
           coin.setCollideWorldBounds(true);
           coin.body.allowGravity = false;
           coin.body.immovable = true;
+          coin.collected = false;
           this.manyCoins.push(coin);
         }
         //::TODO:: make the switch to change position of the boxes
@@ -152,6 +159,42 @@ const PhaserGame = () => {
             cactus.x = 800;
           }
         });
+        // if mushroom is touched by player, player gets a boost and increased size
+        if (this.physics.overlap(this.player, this.mushroom)) {
+          this.boost = 100;
+          this.shroomed = true;
+          this.player.setScale(1.2);
+        }
+        if (this.shroomed) {
+          this.manyCoins.forEach((coin) => {
+            const distance = Phaser.Math.Distance.Between(
+              this.player.x,
+              this.player.y,
+              coin.x,
+              coin.y,
+            );
+
+            if (distance < 150 && !coin.collected) {
+              // Check if the coin is not collected
+              coin.collected = true;
+              setCoins((prevCoins) => prevCoins + 1);
+              coin.destroy();
+            }
+          });
+        }
+        // if shroomed, player can destroy boxes and cactus
+        if (this.shroomed) {
+          this.physics.add.collider(this.player, this.manyBox, () => {
+            this.manyBox.forEach((box) => {
+              box.destroy();
+            });
+          });
+          this.physics.add.collider(this.player, this.manyCactus, () => {
+            this.manyCactus.forEach((cactus) => {
+              cactus.destroy();
+            });
+          });
+        }
 
         // Scroll the background based on the camera's scroll position
         this.background.tilePositionX = this.cameras.main.scrollX;
