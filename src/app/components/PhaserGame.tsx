@@ -6,6 +6,7 @@ import { set } from "zod";
 //::TODO:: Add the ability to shoot projectiles
 //::TODO:: Add a power boost item that allows the player to jump higher or fly for a short period of time
 //::TODO:: Add archievments for the player to collect
+//::TODO:: let the shroom buff expire after a certain amount of time
 
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
@@ -64,6 +65,7 @@ const PhaserGame = () => {
           coin.body.allowGravity = false;
           coin.body.immovable = true;
           coin.collected = false;
+          coin.tencollected = false;
           this.manyCoins.push(coin);
         }
         //::TODO:: make the switch to change position of the boxes
@@ -177,6 +179,7 @@ const PhaserGame = () => {
             if (distance < 150 && !coin.collected) {
               // Check if the coin is not collected
               coin.collected = true;
+
               setCoins((prevCoins) => prevCoins + 1);
               coin.destroy();
             }
@@ -304,6 +307,7 @@ const PhaserGame = () => {
       <h1 className="mb-6 text-3xl font-bold md:text-4xl">
         Game made for fun! Collect 35 coins to get to the next level.
       </h1>
+      <h2>get a mushroon to get huge and suck in coins</h2>
 
       <div id="phaser-game-container" className="relative mb-6">
         <h1 className="mb-2 text-3xl font-bold text-yellow-400 md:text-4xl">
