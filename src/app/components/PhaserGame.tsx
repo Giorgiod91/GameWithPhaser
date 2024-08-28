@@ -54,6 +54,7 @@ const PhaserGame = () => {
         this.mushroom = this.physics.add.image(x / 2, y, "mushroom");
         this.mushroom.body.allowGravity = false;
         this.mushroom.setCollideWorldBounds(true);
+        this.shroomedForHowLong = 0;
         // Create the coins and set the physics
         this.manyCoins = [];
         for (let i = 0; i < 55; i++) {
@@ -153,21 +154,26 @@ const PhaserGame = () => {
       },
       update: function (lvl1Width: number, lvl1Height: number) {
         // Move each cactus to the left
-        this.manyCactus.forEach((cactus) => {
-          cactus.setVelocityX(-100);
+        this.manyCactus = this.manyCactus.filter((cactus) => {
+          if (cactus && cactus.active) {
+            cactus.setVelocityX(-100);
 
-          // Reset cactus position
-          if (cactus.x < 50) {
-            cactus.x = 800;
+            // Reset cactus position
+            if (cactus.x < 50) {
+              cactus.x = 800;
+            }
+            return true;
           }
+          return false;
         });
         // if mushroom is touched by player, player gets a boost and increased size
         if (this.physics.overlap(this.player, this.mushroom)) {
           this.boost = 100;
           this.shroomed = true;
+
           this.player.setScale(1.2);
         }
-        if (this.shroomed) {
+        if (this.shroomed && this.shroomedForHowLong < 10) {
           this.manyCoins.forEach((coin) => {
             const distance = Phaser.Math.Distance.Between(
               this.player.x,
@@ -182,6 +188,7 @@ const PhaserGame = () => {
 
               setCoins((prevCoins) => prevCoins + 1);
               coin.destroy();
+              this.shroomedForHowLong += 1;
             }
           });
         }
@@ -267,7 +274,8 @@ const PhaserGame = () => {
           // Optional: Game over conditions and restart button visibility
           if (this.restartButton) {
             this.restartButton.setVisible(true);
-            setCoins(0);
+
+            this.scene.restart();
           }
         } else {
           if (this.restartButton) {
@@ -298,6 +306,7 @@ const PhaserGame = () => {
     return () => {
       if (gameInstance) {
         gameInstance.destroy(true);
+        setCoins(0);
       }
     };
   }, [gameOver]);
