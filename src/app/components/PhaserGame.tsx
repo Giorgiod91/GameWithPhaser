@@ -28,6 +28,8 @@ const PhaserGame = () => {
         this.load.image("switch", "/assets/items/switchLeft.png");
         this.load.image("mushroom", "/assets/items/mushroomRed.png");
         this.load.image("floor", "/assets/mapImages/grassHalfMid.png");
+        this.load.image("springUp", "/assets/items/springboardUp.png");
+        this.load.image("springPlayer", "/assets/p3_jump.png");
       },
       create: function () {
         // defining the size of LVL1 map
@@ -56,6 +58,11 @@ const PhaserGame = () => {
           .create(0, lvl1Height - floorHeight, "floor")
           .setOrigin(0, 0);
         floorLVL1.setScale(lvl1Width / floorLVL1.width, 1).refreshBody();
+        // creating the springboard
+        this.springboard = this.physics.add.image(50, 500, "springUp");
+        this.springboard.setScale(0.5);
+        this.springboard.setCollideWorldBounds(true);
+        this.springboard.body.allowGravity = false;
 
         // creating the mushroom
         var x = Phaser.Math.Between(50, lvl1Width);
@@ -135,6 +142,9 @@ const PhaserGame = () => {
         this.player.setScale(0.5);
         this.player.setCollideWorldBounds(true);
         this.cameras.main.startFollow(this.player);
+        //creating state to check if player is jumping wiht the pad also set original texture to player
+        this.isJumping = false;
+        this.originalTexture = "player";
 
         // Create player boost
         this.boost = 0;
@@ -150,6 +160,21 @@ const PhaserGame = () => {
         // Add keyboard inputs for movement
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spaceKey = this.cursors.space;
+
+        // add collision between player and springboard
+        this.physics.add.collider(this.player, this.springboard, () => {
+          this.player.setVelocityY(-500);
+          this.player.setTexture("springPlayer");
+          this.isJumping = true;
+
+          // set player texture back to original after 500ms codesnippet i took
+          this.time.delayedCall(500, () => {
+            if (this.isJumping) {
+              this.player.setTexture(this.originalTexture);
+              this.isJumping = false;
+            }
+          });
+        });
 
         // Add collision between player and cactus
         this.physics.add.collider(this.player, this.manyCactus, () => {
@@ -181,6 +206,16 @@ const PhaserGame = () => {
           }
           return false;
         });
+
+        // if player collides with jump pad, player image changes to the jump image
+        // Reset player texture if not jumping
+        if (
+          !this.isJumping &&
+          this.player.texture.key !== this.originalTexture
+        ) {
+          this.player.setTexture(this.originalTexture);
+        }
+
         // if mushroom is touched by player, player gets a boost and increased size
         if (this.physics.overlap(this.player, this.mushroom)) {
           this.boost = 100;
