@@ -27,12 +27,14 @@ const PhaserGame = () => {
         this.load.image("coin", "/assets/items/coinGold.png");
         this.load.image("switch", "/assets/items/switchLeft.png");
         this.load.image("mushroom", "/assets/items/mushroomRed.png");
+        this.load.image("floor", "/assets/mapImages/grassHalfMid.png");
       },
       create: function () {
         // defining the size of LVL1 map
 
         const lvl1Width = 4500;
         const lvl1Height = 600;
+        const floorHeight = 40;
         // Create a movable background
         this.background = this.add.tileSprite(
           0,
@@ -48,9 +50,16 @@ const PhaserGame = () => {
           this.sys.game.config.width,
           this.sys.game.config.height,
         );
+        // creating the floor
+        this.floor = this.physics.add.staticGroup();
+        const floorLVL1 = this.floor
+          .create(0, lvl1Height - floorHeight, "floor")
+          .setOrigin(0, 0);
+        floorLVL1.setScale(lvl1Width / floorLVL1.width, 1).refreshBody();
+
         // creating the mushroom
         var x = Phaser.Math.Between(50, lvl1Width);
-        var y = Phaser.Math.Between(50, lvl1Height);
+        var y = Phaser.Math.Between(50, lvl1Height - 50);
         this.mushroom = this.physics.add.image(x / 2, y, "mushroom");
         this.mushroom.body.allowGravity = false;
         this.mushroom.setCollideWorldBounds(true);
@@ -59,7 +68,7 @@ const PhaserGame = () => {
         this.manyCoins = [];
         for (let i = 0; i < 55; i++) {
           const x = Phaser.Math.Between(50, lvl1Width);
-          const y = Phaser.Math.Between(50, lvl1Height);
+          const y = Phaser.Math.Between(50, lvl1Height - 50);
           const coin = this.physics.add.image(x, y, "coin");
           coin.setScale(0.5);
           coin.setCollideWorldBounds(true);
@@ -71,7 +80,7 @@ const PhaserGame = () => {
         }
         //::TODO:: make the switch to change position of the boxes
         // Create the switch
-        this.switch = this.physics.add.image(50, 760, "switch");
+        this.switch = this.physics.add.image(50, 550, "switch");
         this.switch.setScale(0.5);
         this.switch.setCollideWorldBounds(true);
         this.switch.body.allowGravity = false;
@@ -97,7 +106,7 @@ const PhaserGame = () => {
 
         for (let i = 0; i < 25; i++) {
           const x = generateUniqueX();
-          const cactus = this.physics.add.image(x, 500, "cactus");
+          const cactus = this.physics.add.image(x, 400, "cactus");
           cactus.setScale(0.5);
           cactus.setCollideWorldBounds(true);
           this.manyCactus.push(cactus);
@@ -107,7 +116,7 @@ const PhaserGame = () => {
         this.manyBox = [];
         for (let i = 0; i < 30; i++) {
           const x = Phaser.Math.Between(50, lvl1Width);
-          const y = Phaser.Math.Between(50, lvl1Height);
+          const y = Phaser.Math.Between(50, lvl1Height - 50);
           const box = this.physics.add.image(x, y, "box");
           box.setScale(0.5);
           box.setCollideWorldBounds(true);
@@ -122,7 +131,7 @@ const PhaserGame = () => {
         this.add.image(600, 80, "cloud1");
 
         // Create the player
-        this.player = this.physics.add.image(400, 500, "player");
+        this.player = this.physics.add.image(400, 500 - 19, "player");
         this.player.setScale(0.5);
         this.player.setCollideWorldBounds(true);
         this.cameras.main.startFollow(this.player);
@@ -149,6 +158,12 @@ const PhaserGame = () => {
 
         // Add collision between player and boxes
         this.physics.add.collider(this.player, this.manyBox);
+
+        // Add collision between player and floor
+        this.physics.add.collider(this.player, this.floor);
+
+        // Add collision between cactus and floor
+        this.physics.add.collider(this.manyCactus, this.floor);
 
         // Create button to restart
       },
