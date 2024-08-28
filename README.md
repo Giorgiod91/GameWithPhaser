@@ -1,5 +1,6 @@
 # Trying to create a mini Game with Phaser in Typescript 
-![image](https://github.com/user-attachments/assets/27763b9a-838b-47bf-ae62-d25159b31559)
+![image](https://github.com/user-attachments/assets/075cf2ec-b1c0-47b1-b27d-c0afeaa17d5c)
+
 
 
 
