@@ -30,8 +30,15 @@ const PhaserGame = () => {
         this.load.image("floor", "/assets/mapImages/grassHalfMid.png");
         this.load.image("springUp", "/assets/items/springboardUp.png");
         this.load.image("springPlayer", "/assets/p3_jump.png");
+        this.load.image("weapon", "/assets/weapons/3.png");
+        this.load.image("laser", "/assets/weapons/red_laser.png");
       },
       create: function () {
+        // Setup keyboard inputs
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.rKey = this.input.keyboard.addKey(
+          Phaser.Input.Keyboard.KeyCodes.R,
+        );
         // defining the size of LVL1 map
 
         const lvl1Width = 4500;
@@ -52,6 +59,21 @@ const PhaserGame = () => {
           this.sys.game.config.width,
           this.sys.game.config.height,
         );
+        // creating the laser projetile
+        this.laser = this.physics.add.image(0, 0, "laser");
+        this.laser.setScale(0.1);
+        this.laser.setCollideWorldBounds(true);
+        this.laser.body.allowGravity = false;
+        this.laser.setVisible(false);
+
+        //creating the weapon
+        var x = Phaser.Math.Between(50, lvl1Width);
+        this.weapon = this.physics.add.image(x - 100, 500, "weapon");
+        this.weapon.setScale(0.1);
+        this.weapon.setCollideWorldBounds(true);
+        this.weapon.body.allowGravity = false;
+        this.weapon.setInteractive();
+
         // creating the floor
         this.floor = this.physics.add.staticGroup();
         const floorLVL1 = this.floor
@@ -142,6 +164,14 @@ const PhaserGame = () => {
         this.player.setScale(0.5);
         this.player.setCollideWorldBounds(true);
         this.cameras.main.startFollow(this.player);
+
+        // letting the player hold the weapon
+        this.weaponHold = this.add.sprite(
+          this.player.x,
+          this.player.y,
+          "weapon",
+        );
+        this.weaponHold.setVisible(false);
         //creating state to check if player is jumping wiht the pad also set original texture to player
         this.isJumping = false;
         this.originalTexture = "player";
@@ -161,6 +191,14 @@ const PhaserGame = () => {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spaceKey = this.cursors.space;
 
+        // add collision between player and weapon
+        this.physics.add.collider(this.player, this.weapon, () => {
+          this.weapon.destroy();
+          this.weaponHold.setVisible(true);
+          this.weaponHold.setScale(0.1);
+          this.weaponHold.setPosition(this.player.x, this.player.y);
+        });
+
         // add collision between player and springboard
         this.physics.add.collider(this.player, this.springboard, () => {
           this.player.setVelocityY(-500);
@@ -176,6 +214,17 @@ const PhaserGame = () => {
           });
         });
 
+        // add collision between laser and cactus
+        // check for collision between laser and cactus
+        this.physics.add.collider(
+          this.laser,
+          this.manyCactus,
+          (laser, cactus) => {
+            cactus.destroy();
+            laser.setVisible(false);
+            laser.setVelocityX(0);
+          },
+        );
         // Add collision between player and cactus
         this.physics.add.collider(this.player, this.manyCactus, () => {
           setGameOver(true); // Game over when player collides with any cactus
@@ -206,6 +255,10 @@ const PhaserGame = () => {
           }
           return false;
         });
+        // weaopon hold part
+        if (this.weaponHold.visible) {
+          this.weaponHold.setPosition(this.player.x, this.player.y - 5);
+        }
 
         // if player collides with jump pad, player image changes to the jump image
         // Reset player texture if not jumping
@@ -223,6 +276,11 @@ const PhaserGame = () => {
 
           this.player.setScale(1.2);
         }
+        // adding a timer to the mushroom buff to expire after 15 seconds
+        this.time.delayedCall(15000, () => {
+          this.shroomed = false;
+          this.player.setScale(0.5);
+        });
         if (this.shroomed && this.shroomedForHowLong < 10) {
           this.manyCoins.forEach((coin) => {
             const distance = Phaser.Math.Distance.Between(
@@ -285,6 +343,17 @@ const PhaserGame = () => {
         if (this.boost > 0) {
           this.player.setVelocityY(-100);
           this.boost -= 1;
+        }
+        // let the projectiles move out of the weapon
+        if (this.weaponHold.visible && this.rKey.isDown) {
+          this.laser.setPosition(this.weaponHold.x, this.weaponHold.y);
+          this.laser.setVelocityX(100);
+          this.laser.setVisible(true);
+        } else {
+          if (this.laser.visible) {
+            this.laser.setVisible(false);
+            this.laser.setVelocityX(0);
+          }
         }
 
         // Stop player movement if no key is pressed
