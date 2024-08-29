@@ -17,8 +17,8 @@ const PhaserGame = () => {
   useEffect(() => {
     let gameInstance;
 
-    const sceneConfig = {
-      preload: function () {
+    const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+      preload: function (this: Phaser.Scene) {
         this.load.image("sky", "/assets/mapbg/bg.png");
         this.load.image("player", "/assets/p3_stand.png");
         this.load.image("cloud1", "/assets/items/cloud1.png");
@@ -400,7 +400,7 @@ const PhaserGame = () => {
           }
         }
       },
-    };
+    } as Phaser.Types.Scenes.SettingsConfig;
 
     const config = {
       type: Phaser.AUTO,
