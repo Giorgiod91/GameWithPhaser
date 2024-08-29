@@ -33,7 +33,7 @@ const PhaserGame = () => {
         this.load.image("weapon", "/assets/weapons/3.png");
         this.load.image("laser", "/assets/weapons/red_laser.png");
       },
-      create: function () {
+      create: function (this: any) {
         // Setup keyboard inputs
         this.cursors = this.input.keyboard.createCursorKeys();
         this.rKey = this.input.keyboard.addKey(
