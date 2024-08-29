@@ -351,7 +351,7 @@ const PhaserGame = () => {
           this.laser.setVisible(true);
         }
         if (this.laser.visible && this.laser.body.velocity.x === 0) {
-          this.laser.setVelocityX(300); // Ensure it keeps moving at the same speed
+          this.laser.setVelocityX(300);
         }
 
         // Stop player movement if no key is pressed
