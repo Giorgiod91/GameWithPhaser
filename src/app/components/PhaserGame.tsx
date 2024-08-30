@@ -13,9 +13,38 @@ const PhaserGame = () => {
   const [coins, setCoins] = useState(0);
   const [level, setLevel] = useState(1);
   const [switchPosition, setSwitchPosition] = useState(0);
+  const [leftIsClicked, setLeftIsClicked] = useState(false);
+  const [rightIsClicked, setRightIsClicked] = useState(false);
+  const [jumpIsClicked, setJumpIsClicked] = useState(false);
 
   useEffect(() => {
     let gameInstance;
+
+    // state management for the buttons to change color when clicked and to be able to use the state in the game with an event listener
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft") {
+        setLeftIsClicked(false);
+      }
+      if (event.key === "ArrowRight") {
+        setRightIsClicked(false);
+      }
+      if (event.key === " ") {
+        setJumpIsClicked(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft") {
+        setLeftIsClicked(true);
+      }
+      if (event.key === "ArrowRight") {
+        setRightIsClicked(true);
+      }
+      if (event.key === " ") {
+        setJumpIsClicked(true);
+      }
+    };
 
     const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
       preload: function (this: Phaser.Scene) {
@@ -39,6 +68,11 @@ const PhaserGame = () => {
         this.rKey = this.input.keyboard.addKey(
           Phaser.Input.Keyboard.KeyCodes.R,
         );
+
+        // adding event listeners for the buttons to later use the state for color change
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+
         // defining the size of LVL1 map
 
         const lvl1Width = 4500;
@@ -360,8 +394,10 @@ const PhaserGame = () => {
         // Horizontal movement for player
         if (this.cursors.left.isDown) {
           this.player.setVelocityX(-150);
+          setLeftIsClicked(true);
         } else if (this.cursors.right.isDown) {
           this.player.setVelocityX(150);
+          setRightIsClicked(true);
         }
 
         // Spacebar jump
@@ -369,6 +405,7 @@ const PhaserGame = () => {
           if (this.howManyJumps < this.maxJumps) {
             this.player.setVelocityY(-300);
             this.howManyJumps++;
+            setJumpIsClicked(true);
           }
         }
 
@@ -425,6 +462,9 @@ const PhaserGame = () => {
         gameInstance.destroy(true);
         setCoins(0);
       }
+      // Remove event listeners when the game is destroyed
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
     };
   }, [gameOver]);
 
@@ -433,7 +473,7 @@ const PhaserGame = () => {
       <h1 className="mb-6 text-3xl font-bold md:text-4xl">
         Game made for fun! Collect 35 coins to get to the next level.
       </h1>
-      <h2>get a mushroon to get huge and suck in coins</h2>
+      <h2>Get a mushroom to get huge and suck in coins</h2>
 
       <div id="phaser-game-container" className="relative mb-6">
         <h1 className="mb-2 text-3xl font-bold text-yellow-400 md:text-4xl">
@@ -456,6 +496,32 @@ const PhaserGame = () => {
           <h1 className="text-2xl font-medium text-gray-300">
             Game is Running
           </h1>
+
+          <div className="mt-4 flex flex-col items-center">
+            <button
+              className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
+                leftIsClicked ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
+              }`}
+            >
+              Left
+            </button>
+            <button
+              className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
+                rightIsClicked
+                  ? "bg-green-500"
+                  : "bg-blue-500 hover:bg-blue-600"
+              }`}
+            >
+              Right
+            </button>
+            <button
+              className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
+                jumpIsClicked ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
+              }`}
+            >
+              Jump
+            </button>
+          </div>
         </div>
       )}
     </div>
