@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
 import { motion } from "framer-motion";
 import { set } from "zod";
+import Level2 from "./Level2";
 
 //::TODO:: Add archievments for the player to collect
 
@@ -61,6 +62,13 @@ const PhaserGame = () => {
         this.load.image("laser", "/assets/weapons/red_laser.png");
       },
       create: function (this: any) {
+        // check if 35 coins are collected to go to the next level
+        this.events.on("update", () => {
+          if (coins >= 35) {
+            this.scene.start("Level2");
+            setLevel(2);
+          }
+        });
         // Setup keyboard inputs
         this.cursors = this.input.keyboard.createCursorKeys();
         this.rKey = this.input.keyboard.addKey(
@@ -421,14 +429,18 @@ const PhaserGame = () => {
             }
           });
         }
+        // check if player has collected 35 coins to go to the next level
+        if (coins >= 35 && !this.scene.isActive("Level2")) {
+          this.scene.start("Level2");
+          setLevel(2);
+        }
 
         if (gameOver) {
           // Optional: Game over conditions and restart button visibility
           if (this.restartButton) {
             this.restartButton.setVisible(true);
-
-            this.scene.restart();
           }
+          this.scene.pause();
         } else {
           if (this.restartButton) {
             this.restartButton.setVisible(false);
@@ -442,7 +454,7 @@ const PhaserGame = () => {
       width: 800,
       height: 600,
       parent: "phaser-game-container",
-      scene: sceneConfig,
+      scene: [sceneConfig, Level2],
       physics: {
         default: "arcade",
         arcade: {
@@ -464,7 +476,7 @@ const PhaserGame = () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [gameOver]);
+  }, [gameOver, coins]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
