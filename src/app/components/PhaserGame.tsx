@@ -3,10 +3,8 @@ import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
 import { motion } from "framer-motion";
 import { set } from "zod";
-//::TODO:: Add the ability to shoot projectiles
-//::TODO:: Add a power boost item that allows the player to jump higher or fly for a short period of time
+
 //::TODO:: Add archievments for the player to collect
-//::TODO:: let the shroom buff expire after a certain amount of time
 
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
