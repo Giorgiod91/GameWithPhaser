@@ -1,5 +1,7 @@
 "use client";
 import Phaser from "phaser";
+//TODO:: add a jetpack to get a boost towards the y achsis
+//TODO:: add something similiar like the cactus in lvl 1 but this time coming from the top
 
 export default class Level2 extends Phaser.Scene {
   private background!: Phaser.GameObjects.TileSprite;
@@ -10,6 +12,7 @@ export default class Level2 extends Phaser.Scene {
   private howManyJumps: number = 0;
   private maxJumps: number = 2;
   private randomFloors!: Phaser.Physics.Arcade.StaticGroup;
+  private flag!: Phaser.Physics.Arcade.StaticGroup;
 
   constructor() {
     super({ key: "Level2" });
@@ -19,6 +22,8 @@ export default class Level2 extends Phaser.Scene {
     this.load.image("sky", "/assets/mapbg/bg.png");
     this.load.image("player", "/assets/p3_stand.png");
     this.load.image("floor", "/assets/mapImages/castleMid.png");
+    this.load.image("cactus", "/assets/items/cactus.png");
+    this.load.image("flag", "/assets/items/flagGreen.png");
   }
 
   create() {
@@ -58,8 +63,10 @@ export default class Level2 extends Phaser.Scene {
       const x = Phaser.Math.Between(50, lvl2Width);
       const y = Phaser.Math.Between(50, lvl2Height - 50);
       const floor = this.randomFloors.create(x, y, "floor");
-      floor.setScale(0.2).refreshBody();
+      floor.setScale(0.4).refreshBody();
     }
+    // create flag at the goal line on top in the middle and slighty behind the top
+    this.flag = this.physics.add.sprite(lvl2Width / 2, lvl2Height - 20, "flag");
 
     // Create the player at the starting position
     this.player = this.physics.add.sprite(
