@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
 import Level2 from "./Level2";
-import { IconName } from "react-icons/go";
+import { ImArrowLeft, ImArrowRight, ImArrowUp } from "react-icons/im";
 
 //::TODO:: Add archievments for the player to collect
 //::TODO:: add scene 1 and scene 2 in a separate file and import them here
@@ -515,7 +515,7 @@ const PhaserGame = () => {
                     : "bg-blue-500 hover:bg-blue-600"
                 }`}
               >
-                Left
+                <ImArrowLeft />
               </button>
               <button
                 className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
@@ -524,7 +524,7 @@ const PhaserGame = () => {
                     : "bg-blue-500 hover:bg-blue-600"
                 }`}
               >
-                Right
+                <ImArrowRight />
               </button>
             </div>
             <button
@@ -532,7 +532,7 @@ const PhaserGame = () => {
                 jumpIsClicked ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
               }`}
             >
-              Jump
+              <ImArrowUp />
             </button>
           </div>
         </div>
