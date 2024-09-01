@@ -1,8 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
+import Level2 from "./Level2";
+import { IconName } from "react-icons/go";
 
 //::TODO:: Add archievments for the player to collect
+//::TODO:: add scene 1 and scene 2 in a separate file and import them here
 
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
@@ -446,7 +449,7 @@ const PhaserGame = () => {
       width: 800,
       height: 600,
       parent: "phaser-game-container",
-      scene: [sceneConfig, Level2],
+      scene: [Level2],
       physics: {
         default: "arcade",
         arcade: {
