@@ -6,6 +6,7 @@ import { IconName } from "react-icons/go";
 
 //::TODO:: Add archievments for the player to collect
 //::TODO:: add scene 1 and scene 2 in a separate file and import them here
+//::TODO:: add arrows instead of left right and jump button
 
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
