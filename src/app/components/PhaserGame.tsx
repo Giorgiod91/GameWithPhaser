@@ -1,9 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
-import { motion } from "framer-motion";
-import { set } from "zod";
-import Level2 from "./Level2";
 
 //::TODO:: Add archievments for the player to collect
 
@@ -63,12 +60,7 @@ const PhaserGame = () => {
       },
       create: function (this: any) {
         // check if 35 coins are collected to go to the next level
-        this.events.on("update", () => {
-          if (coins >= 35) {
-            this.scene.start("Level2");
-            setLevel(2);
-          }
-        });
+
         // Setup keyboard inputs
         this.cursors = this.input.keyboard.createCursorKeys();
         this.rKey = this.input.keyboard.addKey(
@@ -430,8 +422,8 @@ const PhaserGame = () => {
           });
         }
         // check if player has collected 35 coins to go to the next level
-        if (coins >= 35 && !this.scene.isActive("Level2")) {
-          this.scene.start("Level2");
+        if (coins >= 5 && !(this as Phaser.Scene).scene.start("Level2")) {
+          (this as Phaser.Scene).scene.start("Level2");
           setLevel(2);
         }
 
@@ -470,13 +462,16 @@ const PhaserGame = () => {
     return () => {
       if (gameInstance) {
         gameInstance.destroy(true);
+
         setCoins(0);
       }
+      // start lv 2 if 10 coins are collected
+
       // Remove event listeners when the game is destroyed
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [gameOver, coins]);
+  }, [gameOver]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
