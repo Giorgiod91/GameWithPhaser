@@ -12,9 +12,7 @@ import { object } from "zod";
 const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [coins, setCoins] = useState(0);
-  const [level, setLevel] = useState(1);
 
-  const [scene, setScene] = useState(1);
   const [switchPosition, setSwitchPosition] = useState(0);
   const [leftIsClicked, setLeftIsClicked] = useState(false);
   const [rightIsClicked, setRightIsClicked] = useState(false);
@@ -49,7 +47,7 @@ const PhaserGame = () => {
       }
     };
 
-    const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+    const level1: Phaser.Types.Scenes.SettingsConfig = {
       preload: function (this: Phaser.Scene) {
         this.load.image("sky", "/assets/mapbg/bg.png");
         this.load.image("player", "/assets/p3_stand.png");
@@ -423,10 +421,6 @@ const PhaserGame = () => {
 
         // Check for player collision with coins and remove coins
         if (this.manyCoins) {
-          if (coins >= 10) {
-            this.scene.start("Level2");
-            setLevel(2);
-          }
           this.manyCoins.forEach((coin) => {
             if (this.physics.overlap(this.player, coin)) {
               setCoins((prevCoins) => prevCoins + 1);
@@ -435,7 +429,10 @@ const PhaserGame = () => {
             }
           });
         }
-        // check if player has collected 35 coins to go to the next level
+        // check if player has collected 3 coins and if so start level 2 scene
+        if (this.coins === 3) {
+          this.scene.start("Level2");
+        }
 
         if (gameOver) {
           // Optional: Game over conditions and restart button visibility
@@ -456,7 +453,9 @@ const PhaserGame = () => {
       width: 800,
       height: 600,
       parent: "phaser-game-container",
-      scene: [sceneConfig, Level2],
+
+      scene: Level2,
+
       physics: {
         default: "arcade",
         arcade: {
