@@ -74,6 +74,7 @@ export default class Level2 extends Phaser.Scene {
       lvl2Height - floorLvl2Height - 50,
       "player",
     );
+    this.player.setScale(0.5);
     this.player.setBounce(0.2);
     this.player.setCollideWorldBounds(true);
 

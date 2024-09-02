@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
 import Level2 from "./Level2";
 import { ImArrowLeft, ImArrowRight, ImArrowUp } from "react-icons/im";
+import { object } from "zod";
 
 //::TODO:: Add archievments for the player to collect
 //::TODO:: add scene 1 and scene 2 in a separate file and import them here
@@ -12,6 +13,8 @@ const PhaserGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [coins, setCoins] = useState(0);
   const [level, setLevel] = useState(1);
+
+  const [scene, setScene] = useState(1);
   const [switchPosition, setSwitchPosition] = useState(0);
   const [leftIsClicked, setLeftIsClicked] = useState(false);
   const [rightIsClicked, setRightIsClicked] = useState(false);
@@ -235,6 +238,8 @@ const PhaserGame = () => {
           this.weaponHold.setPosition(this.player.x, this.player.y);
         });
 
+        this.localCoins = 0;
+
         // add collision between player and springboard
         this.physics.add.collider(this.player, this.springboard, () => {
           this.player.setVelocityY(-500);
@@ -418,18 +423,19 @@ const PhaserGame = () => {
 
         // Check for player collision with coins and remove coins
         if (this.manyCoins) {
+          if (coins >= 10) {
+            this.scene.start("Level2");
+            setLevel(2);
+          }
           this.manyCoins.forEach((coin) => {
             if (this.physics.overlap(this.player, coin)) {
               setCoins((prevCoins) => prevCoins + 1);
+
               coin.destroy();
             }
           });
         }
         // check if player has collected 35 coins to go to the next level
-        if (coins >= 5 && !(this as Phaser.Scene).scene.start("Level2")) {
-          (this as Phaser.Scene).scene.start("Level2");
-          setLevel(2);
-        }
 
         if (gameOver) {
           // Optional: Game over conditions and restart button visibility
@@ -450,7 +456,7 @@ const PhaserGame = () => {
       width: 800,
       height: 600,
       parent: "phaser-game-container",
-      scene: [Level2],
+      scene: [sceneConfig, Level2],
       physics: {
         default: "arcade",
         arcade: {
