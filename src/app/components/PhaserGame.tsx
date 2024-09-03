@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
-import Level2 from "./Level2";
+
 import { ImArrowLeft, ImArrowRight, ImArrowUp } from "react-icons/im";
-import { object } from "zod";
+import { object, set } from "zod";
 
 //::TODO:: Add archievments for the player to collect
 //::TODO:: add scene 1 and scene 2 in a separate file and import them here
@@ -17,6 +17,7 @@ const PhaserGame = () => {
   const [leftIsClicked, setLeftIsClicked] = useState(false);
   const [rightIsClicked, setRightIsClicked] = useState(false);
   const [jumpIsClicked, setJumpIsClicked] = useState(false);
+  const [levelOneStyling, setLevelOneStyling] = useState(false);
 
   useEffect(() => {
     let gameInstance;
@@ -448,13 +449,148 @@ const PhaserGame = () => {
       },
     } as Phaser.Types.Scenes.SettingsConfig;
 
+    const level2: Phaser.Types.Scenes.SettingsConfig = {
+      preload() {
+        this.load.image("sky1", "/assets/mapbg/bglevel2.jpg");
+        this.load.image("player", "/assets/p3_stand.png");
+        this.load.image("floor", "/assets/mapImages/castleMid.png");
+        this.load.image("cactus", "/assets/items/cactus.png");
+        this.load.image("flag", "/assets/items/flagGreen.png");
+        this.load.image("itemOne", "/assets/items/itemOne.png");
+        this.load.image("sky2", "/assets/mapbg/skyy.png");
+      },
+
+      create() {
+        this.add.text(100, 100, "Level 2", { fill: "#0f0" });
+
+        const lvl2Width = 650;
+        const lvl2Height = 4500;
+
+        const floorLvl2Height = 40;
+
+        // adding event listeners for the buttons to later use the state for color change
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        //creating fallin items
+        const fallinItems = [];
+        for (let i = 0; i < 10; i++) {
+          const x = Phaser.Math.Between(50, lvl2Width);
+          const y = Phaser.Math.Between(50, lvl2Height - 50);
+          const item = this.physics.add.image(x, y, "itemOne");
+          item.setScale(0.5);
+          item.setCollideWorldBounds(true);
+          // change the velocity of the items to make them fall slower so a user can dodge
+          item.body.maxVelocity.y = 200;
+
+          fallinItems.push(item);
+        }
+        // Create a movable background
+        this.background = this.add.tileSprite(
+          0,
+          0,
+          lvl2Width,
+          lvl2Height,
+          "sky2",
+        );
+        this.background.setOrigin(0, 0);
+        this.background.setScrollFactor(0);
+
+        // Set camera bounds to the size of the world
+        this.cameras.main.setBounds(0, 0, lvl2Width, lvl2Height);
+        this.physics.world.setBounds(0, 0, lvl2Width, lvl2Height);
+
+        // Initialize the floor as a StaticGroup
+        this.floor = this.physics.add.staticGroup();
+
+        // Create the ground floor
+        const groundFloor = this.floor
+          .create(0, lvl2Height - floorLvl2Height, "floor")
+          .setOrigin(0, 0);
+        groundFloor.setScale(lvl2Width / groundFloor.width, 1).refreshBody();
+
+        // Create random floating floors
+        this.randomFloors = this.physics.add.staticGroup();
+        for (let i = 0; i < 55; i++) {
+          const x = Phaser.Math.Between(50, lvl2Width);
+          const y = Phaser.Math.Between(50, lvl2Height - 50);
+          const floor = this.randomFloors.create(x, y, "floor");
+          floor.setScale(0.4).refreshBody();
+        }
+
+        // Create flag at the goal line on top in the middle and slightly behind the top
+        this.flag = this.physics.add.sprite(
+          lvl2Width / 2,
+          lvl2Height - 20,
+          "flag",
+        );
+
+        // Create the player at the starting position
+        this.player = this.physics.add.sprite(
+          lvl2Width / 2,
+          lvl2Height - floorLvl2Height - 50,
+          "player",
+        );
+        this.player.setScale(0.5);
+        this.player.setBounce(0.2);
+        this.player.setCollideWorldBounds(true);
+
+        // Follow the player with the camera
+        this.cameras.main.startFollow(this.player);
+
+        // Enable gravity for the player
+        this.player.body.allowGravity = true;
+
+        // Add keyboard inputs for movement
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.spaceKey = this.cursors.space;
+
+        // Add colliders between the player and the floors
+        this.physics.add.collider(this.player, this.floor); // Collide with the ground floor
+        this.physics.add.collider(this.player, this.randomFloors); // Collide with the floating floors
+
+        // Initialize jump properties
+        this.howManyJumps = 0;
+        this.maxJumps = 2;
+      },
+
+      update(time, delta) {
+        this.player.setVelocityX(0);
+
+        // Player movement
+        if (this.cursors.left.isDown) {
+          this.player.setVelocityX(-150);
+          setLeftIsClicked(true);
+        } else if (this.cursors.right.isDown) {
+          this.player.setVelocityX(150);
+          setRightIsClicked(true);
+        }
+
+        // Jump
+        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+          if (this.howManyJumps < this.maxJumps) {
+            this.player.setVelocityY(-400); // Adjust this value if necessary
+            this.howManyJumps++;
+            setJumpIsClicked(true);
+          }
+        }
+
+        // Reset jump count when player touches the ground
+        if (this.player.body.blocked.down) {
+          this.howManyJumps = 0;
+        }
+
+        // Scroll the background based on the camera's scroll position
+        this.background.tilePositionY = this.cameras.main.scrollY;
+      },
+    } as Phaser.Types.Scenes.SettingsConfig;
+
     const config = {
       type: Phaser.AUTO,
       width: 800,
       height: 600,
       parent: "phaser-game-container",
 
-      scene: Level2,
+      scene: [level2],
 
       physics: {
         default: "arcade",
