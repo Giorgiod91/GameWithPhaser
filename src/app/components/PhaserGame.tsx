@@ -451,9 +451,9 @@ const PhaserGame = () => {
 
     const level2: Phaser.Types.Scenes.SettingsConfig = {
       preload() {
-        this.load.image("sky1", "/assets/mapbg/bglevel2.jpg");
+        this.load.image("sky1", "/assets/mapbg/bg_castle.png");
         this.load.image("player", "/assets/p3_stand.png");
-        this.load.image("floor", "/assets/mapImages/castleMid.png");
+        this.load.image("floor", "/assets/mapImages/sandMid.png");
         this.load.image("cactus", "/assets/items/cactus.png");
         this.load.image("flag", "/assets/items/flagGreen.png");
         this.load.image("itemOne", "/assets/items/itemOne.png");
@@ -479,7 +479,7 @@ const PhaserGame = () => {
           const item = this.physics.add.image(x, y, "itemOne");
           item.setScale(0.5);
           item.setCollideWorldBounds(true);
-          // change the velocity of the items to make them fall slower so a user can dodge
+
           item.body.maxVelocity.y = 200;
 
           fallinItems.push(item);
@@ -490,7 +490,7 @@ const PhaserGame = () => {
           0,
           lvl2Width,
           lvl2Height,
-          "sky2",
+          "sky1",
         );
         this.background.setOrigin(0, 0);
         this.background.setScrollFactor(0);
