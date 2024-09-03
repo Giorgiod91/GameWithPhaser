@@ -458,6 +458,8 @@ const PhaserGame = () => {
         this.load.image("flag", "/assets/items/flagGreen.png");
         this.load.image("itemOne", "/assets/items/itemOne.png");
         this.load.image("sky2", "/assets/mapbg/skyy.png");
+        this.load.image("coin", "/assets/items/coinGold.png");
+        this.load.image("star", "/assets/items/star.png");
       },
 
       create() {
@@ -492,8 +494,30 @@ const PhaserGame = () => {
           lvl2Height,
           "sky1",
         );
-        this.background.setOrigin(0, 0);
+
         this.background.setScrollFactor(0);
+        this.background.setOrigin(0, 0);
+        this.background.setDepth(-1);
+
+        // star
+        this.star = this.physics.add.image(500, 4400, "star");
+        this.star.body.allowGravity = false;
+        this.star.setCollideWorldBounds(true);
+
+        //coins
+        this.manyCoins = [];
+        for (let i = 0; i < 55; i++) {
+          const x = Phaser.Math.Between(50, lvl2Width);
+          const y = Phaser.Math.Between(50, lvl2Height - 50);
+          const coin = this.physics.add.image(x, y, "coin");
+          coin.setScale(0.5);
+          coin.setCollideWorldBounds(true);
+          coin.body.allowGravity = false;
+          coin.body.immovable = true;
+          coin.collected = false;
+          coin.tencollected = false;
+          this.manyCoins.push(coin);
+        }
 
         // Set camera bounds to the size of the world
         this.cameras.main.setBounds(0, 0, lvl2Width, lvl2Height);
@@ -548,6 +572,14 @@ const PhaserGame = () => {
         this.physics.add.collider(this.player, this.floor); // Collide with the ground floor
         this.physics.add.collider(this.player, this.randomFloors); // Collide with the floating floors
 
+        //// Add collider between player and star
+        this.physics.add.collider(this.player, this.star);
+
+        // Add collider between player and falling items
+        this.physics.add.collider(this.player, this.fallinItems, () => {
+          setGameOver(true);
+        });
+
         // Initialize jump properties
         this.howManyJumps = 0;
         this.maxJumps = 2;
@@ -555,6 +587,27 @@ const PhaserGame = () => {
 
       update(time, delta) {
         this.player.setVelocityX(0);
+
+        // creating the star bonus
+
+        if (this.physics.overlap(this.player, this.star)) {
+          //lets the palyer fly up
+
+          this.star.x = this.player.x;
+        }
+
+        // check collide  between player and falling items and if so gameover
+
+        // Check for player collision with coins and remove coins
+        if (this.manyCoins) {
+          this.manyCoins.forEach((coin) => {
+            if (this.physics.overlap(this.player, coin)) {
+              setCoins((prevCoins) => prevCoins + 1);
+
+              coin.destroy();
+            }
+          });
+        }
 
         // Player movement
         if (this.cursors.left.isDown) {
