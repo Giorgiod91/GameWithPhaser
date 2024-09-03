@@ -1,7 +1,8 @@
 # Trying to create a mini Game with Phaser in Typescript 
 ![image](https://github.com/user-attachments/assets/544afaef-d775-4991-99be-a8aceb3d61db)
 
-
+# LVL 2 in progress with falling objects, lvl goes upwards
+![image](https://github.com/user-attachments/assets/52783f16-89d5-44a6-9fd7-112738860296)
 
 
 
