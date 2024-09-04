@@ -463,6 +463,7 @@ const PhaserGame = () => {
       private spaceKey!: any;
       private howManyJumps!: number;
       private maxJumps!: number;
+      private fallinItems!: Phaser.Physics.Arcade.Group;
 
       constructor() {
         super({ key: "Level2" });
@@ -478,6 +479,7 @@ const PhaserGame = () => {
         this.load.image("sky2", "/assets/mapbg/skyy.png");
         this.load.image("coin", "/assets/items/coinGold.png");
         this.load.image("star", "/assets/items/star.png");
+        this.load.image("playerBoost", "/assets/p3_jump.png");
       }
 
       create() {
@@ -492,18 +494,22 @@ const PhaserGame = () => {
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
         //creating fallin items
-        const fallinItems = [];
-        for (let i = 0; i < 10; i++) {
-          const x = Phaser.Math.Between(50, lvl2Width);
-          const y = Phaser.Math.Between(50, lvl2Height - 50);
-          const item = this.physics.add.image(x, y, "itemOne");
-          item.setScale(0.5);
-          item.setCollideWorldBounds(true);
+        // Initialize the falling items group
+        this.fallinItems = this.physics.add.group({
+          key: "itemOne",
+          repeat: 9, // Number of items
+          setXY: { x: 50, y: 0, stepX: 70 },
+        });
 
-          item.body.maxVelocity.y = 200;
+        // Configure each falling item
+        this.fallinItems.children.iterate(
+          (item: Phaser.Physics.Arcade.Image) => {
+            item.setScale(0.5);
+            item.setCollideWorldBounds(true);
+            item.body.maxVelocity.y = 200;
+          },
+        );
 
-          fallinItems.push(item);
-        }
         // Create a movable background
         this.background = this.add.tileSprite(
           0,
@@ -598,15 +604,21 @@ const PhaserGame = () => {
         //// Add collider between player and star after some seconds it gets removed
         this.physics.add.collider(this.player, this.star, () => {
           this.player.body.allowGravity = false;
+          this.player.setTexture("playerBoost");
           this.time.delayedCall(5000, () => {
             this.player.body.allowGravity = true;
+            this.player.setTexture("player");
           });
         });
 
         // Add collider between player and falling items
-        this.physics.add.collider(this.player, this.fallinItems, () => {
-          setGameOver(true);
-        });
+        this.physics.add.collider(
+          this.player,
+          this.fallinItems,
+          (player, fallinItems) => {
+            setGameOver(true);
+          },
+        );
 
         // Initialize jump properties
         this.howManyJumps = 0;
