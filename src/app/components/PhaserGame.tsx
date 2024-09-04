@@ -448,8 +448,11 @@ const PhaserGame = () => {
         }
       },
     } as Phaser.Types.Scenes.SettingsConfig;
+    class Level2 extends Phaser.Scene {
+      constructor() {
+        super({ key: "Level2" });
+      }
 
-    const level2: Phaser.Types.Scenes.SettingsConfig = {
       preload() {
         this.load.image("sky1", "/assets/mapbg/bg_castle.png");
         this.load.image("player", "/assets/p3_stand.png");
@@ -460,7 +463,7 @@ const PhaserGame = () => {
         this.load.image("sky2", "/assets/mapbg/skyy.png");
         this.load.image("coin", "/assets/items/coinGold.png");
         this.load.image("star", "/assets/items/star.png");
-      },
+      }
 
       create() {
         this.add.text(100, 100, "Level 2", { fill: "#0f0" });
@@ -583,7 +586,7 @@ const PhaserGame = () => {
         // Initialize jump properties
         this.howManyJumps = 0;
         this.maxJumps = 2;
-      },
+      }
 
       update(time, delta) {
         this.player.setVelocityX(0);
@@ -634,8 +637,8 @@ const PhaserGame = () => {
 
         // Scroll the background based on the camera's scroll position
         this.background.tilePositionY = this.cameras.main.scrollY;
-      },
-    } as Phaser.Types.Scenes.SettingsConfig;
+      }
+    }
 
     const config = {
       type: Phaser.AUTO,
@@ -643,12 +646,12 @@ const PhaserGame = () => {
       height: 600,
       parent: "phaser-game-container",
 
-      scene: [level2],
+      scene: [Level2],
 
       physics: {
         default: "arcade",
         arcade: {
-          gravity: { y: 500 },
+          gravity: { y: 500, x: 0 },
           width: 1600,
           height: 600,
         },
