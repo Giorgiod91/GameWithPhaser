@@ -19,6 +19,9 @@ const PhaserGame = () => {
   const [jumpIsClicked, setJumpIsClicked] = useState(false);
   const [levelOneStyling, setLevelOneStyling] = useState(false);
 
+  const lvl2Text = "Collect a Star to get super boost!";
+  const lvl1Text = "Collect a Weapon to shoot cactus!";
+
   useEffect(() => {
     let gameInstance;
 
@@ -592,8 +595,13 @@ const PhaserGame = () => {
         this.physics.add.collider(this.player, this.floor); // Collide with the ground floor
         this.physics.add.collider(this.player, this.randomFloors); // Collide with the floating floors
 
-        //// Add collider between player and star
-        this.physics.add.collider(this.player, this.star);
+        //// Add collider between player and star after some seconds it gets removed
+        this.physics.add.collider(this.player, this.star, () => {
+          this.player.body.allowGravity = false;
+          this.time.delayedCall(5000, () => {
+            this.player.body.allowGravity = true;
+          });
+        });
 
         // Add collider between player and falling items
         this.physics.add.collider(this.player, this.fallinItems, () => {
@@ -615,8 +623,6 @@ const PhaserGame = () => {
 
         if (this.physics.overlap(this.player, this.star)) {
           //lets the palyer fly up
-
-          window.alert("whops");
         }
 
         // check collide  between player and falling items and if so gameover
