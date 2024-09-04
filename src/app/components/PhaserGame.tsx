@@ -226,7 +226,7 @@ const PhaserGame = () => {
         this.player.setVelocity(0, 0);
 
         // Add keyboard inputs for movement
-        this.cursors = this.input.keyboard.createCursorKeys();
+        this.cursors = this.input?.keyboard.createCursorKeys();
         this.spaceKey = this.cursors.space;
 
         // add collision between player and weapon
@@ -449,6 +449,18 @@ const PhaserGame = () => {
       },
     } as Phaser.Types.Scenes.SettingsConfig;
     class Level2 extends Phaser.Scene {
+      private background!: Phaser.GameObjects.TileSprite;
+      private star!: Phaser.GameObjects.Image;
+      private manyCoins!: Phaser.GameObjects.Image[];
+      private floor!: Phaser.Physics.Arcade.StaticGroup;
+      private randomFloors!: Phaser.Physics.Arcade.StaticGroup;
+      private flag!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+      private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+      private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+      private spaceKey!: any;
+      private howManyJumps!: number;
+      private maxJumps!: number;
+
       constructor() {
         super({ key: "Level2" });
       }
@@ -504,8 +516,9 @@ const PhaserGame = () => {
 
         // star
         this.star = this.physics.add.image(500, 4400, "star");
-        this.star.body.allowGravity = false;
-        this.star.setCollideWorldBounds(true);
+        (this.star.body as Phaser.Physics.Arcade.Body).allowGravity = false;
+        const starBody = this.star.body as Phaser.Physics.Arcade.Body;
+        starBody.allowGravity = false;
 
         //coins
         this.manyCoins = [];
@@ -568,7 +581,11 @@ const PhaserGame = () => {
         this.player.body.allowGravity = true;
 
         // Add keyboard inputs for movement
-        this.cursors = this.input.keyboard.createCursorKeys();
+        if (this.input) {
+          if (this.input && this.input.keyboard) {
+            this.cursors = this.input.keyboard.createCursorKeys();
+          }
+        }
         this.spaceKey = this.cursors.space;
 
         // Add colliders between the player and the floors
@@ -587,6 +604,9 @@ const PhaserGame = () => {
         this.howManyJumps = 0;
         this.maxJumps = 2;
       }
+      fallinItems(player: any, fallinItems: any, arg2: () => void) {
+        throw new Error("Method not implemented.");
+      }
 
       update(time, delta) {
         this.player.setVelocityX(0);
@@ -596,7 +616,7 @@ const PhaserGame = () => {
         if (this.physics.overlap(this.player, this.star)) {
           //lets the palyer fly up
 
-          this.star.x = this.player.x;
+          window.alert("whops");
         }
 
         // check collide  between player and falling items and if so gameover
