@@ -717,7 +717,9 @@ const PhaserGame = () => {
       <h1 className="mb-6 text-3xl font-bold md:text-4xl">
         Game made for fun! Collect 35 coins to get to the next level.
       </h1>
-      <h2>Get a mushroom to get huge and suck in coins</h2>
+      <h2 className="text-lg md:text-xl">
+        Get a mushroom to get huge and suck in coins
+      </h2>
 
       <div id="phaser-game-container" className="relative mb-6">
         <h1 className="mb-2 text-3xl font-bold text-yellow-400 md:text-4xl">
@@ -726,25 +728,25 @@ const PhaserGame = () => {
       </div>
 
       {gameOver ? (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center rounded-lg bg-gray-800 bg-opacity-80 p-6 shadow-lg">
           <h1 className="mb-4 text-4xl font-bold text-red-500">Game Over</h1>
           <button
             onClick={() => setGameOver(false)}
-            className="rounded-lg bg-blue-500 px-6 py-2 font-semibold text-white shadow-md transition duration-300 hover:bg-blue-600"
+            className="transform rounded-lg bg-blue-500 px-6 py-2 font-semibold text-white shadow-md transition-transform hover:scale-105 hover:bg-blue-600"
           >
             Try Again
           </button>
         </div>
       ) : (
         <div className="flex flex-col items-center">
-          <h1 className="text-2xl font-medium text-gray-300">
+          <h1 className="mb-4 text-2xl font-medium text-gray-300">
             Game is Running
           </h1>
 
           <div className="mt-4 flex flex-col items-center">
             <div className="flex flex-row space-x-5 p-4">
               <button
-                className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
+                className={`transform rounded-lg px-6 py-2 font-semibold text-white shadow-md transition-transform ${
                   leftIsClicked
                     ? "bg-green-500"
                     : "bg-blue-500 hover:bg-blue-600"
@@ -753,7 +755,7 @@ const PhaserGame = () => {
                 <ImArrowLeft />
               </button>
               <button
-                className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
+                className={`transform rounded-lg px-6 py-2 font-semibold text-white shadow-md transition-transform ${
                   rightIsClicked
                     ? "bg-green-500"
                     : "bg-blue-500 hover:bg-blue-600"
@@ -763,7 +765,7 @@ const PhaserGame = () => {
               </button>
             </div>
             <button
-              className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
+              className={`transform rounded-lg px-6 py-2 font-semibold text-white shadow-md transition-transform ${
                 jumpIsClicked ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
               }`}
             >
