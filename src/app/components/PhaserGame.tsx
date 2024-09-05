@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
-
 import { ImArrowLeft, ImArrowRight, ImArrowUp } from "react-icons/im";
 import { object, set } from "zod";
 
@@ -51,8 +50,44 @@ const PhaserGame = () => {
       }
     };
 
+    interface CustomCoin extends Phaser.Physics.Arcade.Image {
+      collected?: boolean;
+    }
+    interface Level1Scene extends Phaser.Scene {
+      manyCactus: Phaser.Physics.Arcade.Image[];
+      mushroom: Phaser.Physics.Arcade.Image;
+      background: Phaser.GameObjects.TileSprite;
+      laser: Phaser.Physics.Arcade.Image;
+      cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+      rKey: Phaser.Input.Keyboard.Key;
+      weapon: Phaser.Physics.Arcade.Image;
+      floor: Phaser.Physics.Arcade.StaticGroup;
+      springboard: Phaser.Physics.Arcade.Image;
+      shroomedForHowLong: number;
+      manyCoins: Phaser.Physics.Arcade.Image[];
+      switch: Phaser.Physics.Arcade.Image;
+      switchActivated: boolean;
+      player: Phaser.Physics.Arcade.Image;
+      boost: number;
+      howManyJumps: number;
+      maxJumps: number;
+      playerHold: Phaser.GameObjects.Sprite;
+      isJumping: boolean;
+      originalTexture: string;
+      coins: number;
+      gameOver: boolean;
+      restartButton?: Phaser.GameObjects.Text;
+      localCoins: number;
+      manyBox: Phaser.Physics.Arcade.Image[];
+      collected: boolean;
+
+      weaponHold: Phaser.GameObjects.Sprite;
+      spaceKey: Phaser.Input.Keyboard.Key;
+      shroomed: boolean;
+    }
+
     const level1: Phaser.Types.Scenes.SettingsConfig = {
-      preload: function (this: Phaser.Scene) {
+      preload: function (this: Level1Scene) {
         this.load.image("sky", "/assets/mapbg/bg.png");
         this.load.image("player", "/assets/p3_stand.png");
         this.load.image("cloud1", "/assets/items/cloud1.png");
@@ -67,25 +102,45 @@ const PhaserGame = () => {
         this.load.image("weapon", "/assets/weapons/3.png");
         this.load.image("laser", "/assets/weapons/red_laser.png");
       },
-      create: function (this: any) {
-        // check if 35 coins are collected to go to the next level
-
+      create: function (this: Level1Scene) {
         // Setup keyboard inputs
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.rKey = this.input.keyboard.addKey(
-          Phaser.Input.Keyboard.KeyCodes.R,
-        );
 
-        // adding event listeners for the buttons to later use the state for color change
+        this.restartButton = this.add
+          .text(
+            Number(this.sys.game.config.width) / 2,
+            Number(this.sys.game.config.height) / 2,
+            "Restart",
+            {
+              fontSize: "32px",
+              backgroundColor: "#000",
+              padding: { x: 20, y: 10 },
+            },
+          )
+          .setOrigin(0.5)
+          .setVisible(false)
+          .setInteractive();
+
+        this.restartButton.on("pointerdown", () => {
+          this.scene.restart(); // Restart the current scene
+        });
+        // Setup keyboard inputs
+        if (this.input && this.input.keyboard) {
+          this.cursors = this.input.keyboard.createCursorKeys();
+          this.spaceKey = this.cursors.space;
+          this.rKey = this.input.keyboard.addKey(
+            Phaser.Input.Keyboard.KeyCodes.R,
+          );
+        }
+        // Event listeners
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
 
-        // defining the size of LVL1 map
-
+        // Map size
         const lvl1Width = 4500;
         const lvl1Height = 600;
         const floorHeight = 40;
-        // Create a movable background
+
+        // Background
         this.background = this.add.tileSprite(
           0,
           0,
@@ -95,99 +150,144 @@ const PhaserGame = () => {
         );
         this.background.setOrigin(0, 0);
         this.background.setScrollFactor(0);
-
         this.background.setDisplaySize(
-          this.sys.game.config.width,
-          this.sys.game.config.height,
+          Number(this.sys.game.config.width),
+          Number(this.sys.game.config.height),
         );
-        // creating the laser projetile
+
+        // Laser projectile
         this.laser = this.physics.add.image(0, 0, "laser");
         this.laser.setScale(0.1);
         this.laser.setCollideWorldBounds(true);
-        this.laser.body.allowGravity = false;
-        this.laser.setVisible(false);
+        if (
+          this.laser.body &&
+          !(this.laser.body instanceof Phaser.Physics.Arcade.StaticBody)
+        ) {
+          this.laser.body.allowGravity = false;
+        }
 
-        //creating the weapon
-        var x = Phaser.Math.Between(50, lvl1Width);
-        this.weapon = this.physics.add.image(x - 100, 500, "weapon");
+        (this.laser as Phaser.Physics.Arcade.Image).setVisible(false);
+
+        // Weapon
+        const weaponX = Phaser.Math.Between(50, lvl1Width);
+        this.weapon = this.physics.add.image(weaponX - 100, 500, "weapon");
         this.weapon.setScale(0.1);
         this.weapon.setCollideWorldBounds(true);
-        this.weapon.body.allowGravity = false;
+        if (
+          this.laser.body &&
+          !(this.laser.body instanceof Phaser.Physics.Arcade.StaticBody)
+        ) {
+          this.laser.body.allowGravity = false;
+        }
         this.weapon.setInteractive();
 
-        // creating the floor
+        // Floor
         this.floor = this.physics.add.staticGroup();
         const floorLVL1 = this.floor
           .create(0, lvl1Height - floorHeight, "floor")
           .setOrigin(0, 0);
         floorLVL1.setScale(lvl1Width / floorLVL1.width, 1).refreshBody();
-        // creating the springboard
+
+        // Springboard
         this.springboard = this.physics.add.image(50, 500, "springUp");
         this.springboard.setScale(0.5);
         this.springboard.setCollideWorldBounds(true);
-        this.springboard.body.allowGravity = false;
+        if (
+          this.springboard.body &&
+          !(this.springboard.body instanceof Phaser.Physics.Arcade.StaticBody)
+        ) {
+          this.springboard.body.allowGravity = false;
+        }
+        // Mushroom
+        const mushroomX = Phaser.Math.Between(50, lvl1Width);
+        const mushroomY = Phaser.Math.Between(50, lvl1Height - 50);
+        this.mushroom = this.physics.add.image(
+          mushroomX / 2,
+          mushroomY,
+          "mushroom",
+        ) as Phaser.Physics.Arcade.Image;
+        if (
+          this.mushroom.body &&
+          !(this.mushroom.body instanceof Phaser.Physics.Arcade.StaticBody)
+        ) {
+          this.mushroom.body.allowGravity = false;
+        }
 
-        // creating the mushroom
-        var x = Phaser.Math.Between(50, lvl1Width);
-        var y = Phaser.Math.Between(50, lvl1Height - 50);
-        this.mushroom = this.physics.add.image(x / 2, y, "mushroom");
-        this.mushroom.body.allowGravity = false;
         this.mushroom.setCollideWorldBounds(true);
         this.shroomedForHowLong = 0;
-        // Create the coins and set the physics
+
+        // Coins
         this.manyCoins = [];
         for (let i = 0; i < 55; i++) {
-          const x = Phaser.Math.Between(50, lvl1Width);
-          const y = Phaser.Math.Between(50, lvl1Height - 50);
-          const coin = this.physics.add.image(x, y, "coin");
+          const coinX = Phaser.Math.Between(50, lvl1Width);
+          const coinY = Phaser.Math.Between(50, lvl1Height - 50);
+          interface Coin extends Phaser.Physics.Arcade.Image {
+            collected: boolean;
+          }
+
+          const coin = this.physics.add.image(coinX, coinY, "coin") as Coin;
+          coin.collected = false;
           coin.setScale(0.5);
           coin.setCollideWorldBounds(true);
-          coin.body.allowGravity = false;
-          coin.body.immovable = true;
+          if (
+            coin.body &&
+            !(coin.body instanceof Phaser.Physics.Arcade.StaticBody)
+          ) {
+            coin.body.setAllowGravity(false);
+          }
+          if (
+            coin.body &&
+            !(coin.body instanceof Phaser.Physics.Arcade.StaticBody)
+          ) {
+            coin.body.immovable = true;
+          }
+
           coin.collected = false;
-          coin.tencollected = false;
           this.manyCoins.push(coin);
         }
-        //::TODO:: make the switch to change position of the boxes
-        // Create the switch
+
+        // Switch
         this.switch = this.physics.add.image(50, 550, "switch");
         this.switch.setScale(0.5);
         this.switch.setCollideWorldBounds(true);
-        this.switch.body.allowGravity = false;
+        if (
+          this.switch.body &&
+          !(this.switch.body instanceof Phaser.Physics.Arcade.StaticBody)
+        ) {
+          this.switch.body.allowGravity = false;
+        }
+
         this.switchActivated = false;
 
-        // Set camera bounds to the size of the world
+        // Camera and physics bounds
         this.cameras.main.setBounds(0, 0, lvl1Width, lvl1Height);
         this.physics.world.setBounds(0, 0, lvl1Width, lvl1Height);
 
-        // Create the cactus objects with dynamic physics
+        // Cacti
         this.manyCactus = [];
-        const usedXPositions = new Set();
-
-        // Function to generate unique x positions for cactus
-        const generateUniqueX = () => {
-          let x;
+        const usedXPositions = new Set<number>();
+        const generateUniqueX = (): number => {
+          let x: number;
           do {
             x = Phaser.Math.Between(600, lvl1Width);
           } while (usedXPositions.has(x));
           usedXPositions.add(x);
           return x;
         };
-
         for (let i = 0; i < 25; i++) {
-          const x = generateUniqueX();
-          const cactus = this.physics.add.image(x, 400, "cactus");
+          const cactusX = generateUniqueX();
+          const cactus = this.physics.add.image(cactusX, 400, "cactus");
           cactus.setScale(0.5);
           cactus.setCollideWorldBounds(true);
           this.manyCactus.push(cactus);
         }
 
-        // Create the box objects
+        // Boxes
         this.manyBox = [];
         for (let i = 0; i < 30; i++) {
-          const x = Phaser.Math.Between(50, lvl1Width);
-          const y = Phaser.Math.Between(50, lvl1Height - 50);
-          const box = this.physics.add.image(x, y, "box");
+          const boxX = Phaser.Math.Between(50, lvl1Width);
+          const boxY = Phaser.Math.Between(50, lvl1Height - 50);
+          const box = this.physics.add.image(boxX, boxY, "box");
           box.setScale(0.5);
           box.setCollideWorldBounds(true);
           box.body.allowGravity = false;
@@ -195,60 +295,65 @@ const PhaserGame = () => {
           this.manyBox.push(box);
         }
 
-        // Create the clouds in the background
+        // Clouds
         this.add.image(200, 100, "cloud1");
         this.add.image(400, 90, "cloud1");
         this.add.image(600, 80, "cloud1");
 
-        // Create the player
+        // Player
         this.player = this.physics.add.image(400, 500 - 19, "player");
         this.player.setScale(0.5);
         this.player.setCollideWorldBounds(true);
         this.cameras.main.startFollow(this.player);
 
-        // letting the player hold the weapon
+        // Weapon hold
         this.weaponHold = this.add.sprite(
           this.player.x,
           this.player.y,
           "weapon",
         );
         this.weaponHold.setVisible(false);
-        //creating state to check if player is jumping wiht the pad also set original texture to player
+
+        // Player state
         this.isJumping = false;
         this.originalTexture = "player";
 
-        // Create player boost
+        // Player boost
         this.boost = 0;
         this.howManyJumps = 0;
         this.maxJumps = 2;
+        this.gameOver = false;
+        this.localCoins = 0;
+        this.collected = false;
 
-        // Enable gravity for the player
-        this.player.body.allowGravity = true;
-
-        // Set initial velocity to zero
+        // Player gravity and velocity
+        if (
+          this.player.body &&
+          !(this.player.body instanceof Phaser.Physics.Arcade.StaticBody)
+        ) {
+          this.player.body.allowGravity = true;
+        }
         this.player.setVelocity(0, 0);
 
-        // Add keyboard inputs for movement
-        this.cursors = this.input?.keyboard.createCursorKeys();
-        this.spaceKey = this.cursors.space;
+        // Keyboard inputs
+        if (this.input && this.input.keyboard && this.spaceKey) {
+          this.cursors = this.input.keyboard.createCursorKeys();
+          this.spaceKey = this.cursors.space;
+        }
 
-        // add collision between player and weapon
+        // Colliders
         this.physics.add.collider(this.player, this.weapon, () => {
           this.weapon.destroy();
           this.weaponHold.setVisible(true);
           this.weaponHold.setScale(0.1);
           this.weaponHold.setPosition(this.player.x, this.player.y);
         });
+        // Collide with springboard
 
-        this.localCoins = 0;
-
-        // add collision between player and springboard
         this.physics.add.collider(this.player, this.springboard, () => {
           this.player.setVelocityY(-500);
           this.player.setTexture("springPlayer");
           this.isJumping = true;
-
-          // set player texture back to original after 500ms codesnippet i took
           this.time.delayedCall(500, () => {
             if (this.isJumping) {
               this.player.setTexture(this.originalTexture);
@@ -256,41 +361,39 @@ const PhaserGame = () => {
             }
           });
         });
+        // Collide between laser and cactus
 
-        // add collision between laser and cactus
-        // check for collision between laser and cactus
         this.physics.add.collider(
           this.laser,
           this.manyCactus,
-          (laser: any, cactus: any) => {
-            cactus.destroy();
-            laser.setVisible(false);
-            laser.setVelocityX(0);
+          (laser, cactus) => {
+            (cactus as Phaser.Physics.Arcade.Image).destroy();
+            (laser as Phaser.Physics.Arcade.Image).setVisible(false);
+            (laser as Phaser.Physics.Arcade.Image).setVelocityX(0);
           },
         );
-        // Add collision between player and cactus
+        // Collide between player and cactus
+
         this.physics.add.collider(this.player, this.manyCactus, () => {
-          setGameOver(true); // Game over when player collides with any cactus
+          console.log("Player hit a cactus");
+          setGameOver(true);
         });
+        // Collide between player and box player floor
 
-        // Add collision between player and boxes
         this.physics.add.collider(this.player, this.manyBox);
-
-        // Add collision between player and floor
         this.physics.add.collider(this.player, this.floor);
-
-        // Add collision between cactus and floor
+        // Collide between cache and floor
         this.physics.add.collider(this.manyCactus, this.floor);
-
-        // Create button to restart
       },
-      update: function (lvl1Width: number, lvl1Height: number) {
-        // Move each cactus to the left
+      update: function (
+        this: Level1Scene,
+        lvl1Width: number,
+        lvl1Height: number,
+      ) {
+        // cactus movement
         this.manyCactus = this.manyCactus.filter((cactus) => {
           if (cactus && cactus.active) {
             cactus.setVelocityX(-100);
-
-            // Reset cactus position
             if (cactus.x < 50) {
               cactus.x = 800;
             }
@@ -298,52 +401,49 @@ const PhaserGame = () => {
           }
           return false;
         });
-        // weaopon hold part
+        // trying to get the weapon to look like it is in the players hand
         if (this.weaponHold.visible) {
           this.weaponHold.setPosition(this.player.x, this.player.y - 5);
         }
-
-        // if player collides with jump pad, player image changes to the jump image
-        // Reset player texture if not jumping
+        // texture change for the player when jumping
         if (
           !this.isJumping &&
           this.player.texture.key !== this.originalTexture
         ) {
           this.player.setTexture(this.originalTexture);
         }
+        // mushroom boost logic
 
-        // if mushroom is touched by player, player gets a boost and increased size
         if (this.physics.overlap(this.player, this.mushroom)) {
           this.boost = 100;
           this.shroomed = true;
-
           this.player.setScale(1.2);
         }
-        // adding a timer to the mushroom buff to expire after 15 seconds
+        // mushroom boost time
+
         this.time.delayedCall(15000, () => {
           this.shroomed = false;
           this.player.setScale(0.5);
         });
+        // mushroom boost sucking in coins
         if (this.shroomed && this.shroomedForHowLong < 10) {
-          this.manyCoins.forEach((coin) => {
+          this.manyCoins.forEach((coin: CustomCoin) => {
             const distance = Phaser.Math.Distance.Between(
               this.player.x,
               this.player.y,
               coin.x,
               coin.y,
             );
-
             if (distance < 150 && !coin.collected) {
-              // Check if the coin is not collected
               coin.collected = true;
-
-              setCoins((prevCoins) => prevCoins + 1);
+              this.localCoins += 1;
               coin.destroy();
               this.shroomedForHowLong += 1;
             }
           });
         }
-        // if shroomed, player can destroy boxes and cactus
+
+        // mushroom boost will destroy the cactus and boxes
         if (this.shroomed) {
           this.physics.add.collider(this.player, this.manyBox, () => {
             this.manyBox.forEach((box) => {
@@ -356,94 +456,86 @@ const PhaserGame = () => {
             });
           });
         }
-
-        // Scroll the background based on the camera's scroll position
+        // background scroll
         this.background.tilePositionX = this.cameras.main.scrollX;
 
-        // Check for duplicate x positions and remove duplicates
-        const seenXPositions = new Set();
+        const seenXPositions = new Set<number>();
         this.manyCactus.forEach((cactus) => {
           if (seenXPositions.has(cactus.x)) {
-            cactus.destroy(); // Remove cactus with duplicate x position
+            cactus.destroy();
           } else {
             seenXPositions.add(cactus.x);
           }
         });
-        // Check for player collision with switch then switch stuff around
+
         if (
           this.physics.overlap(this.player, this.switch) &&
           !this.switchActivated
         ) {
-          //  give the boxes new random positions
-
           this.manyBox.forEach((box) => {
             box.x = Phaser.Math.Between(50, lvl1Width);
             this.switchActivated = true;
           });
         }
 
-        // Create player boost
         if (this.boost > 0) {
           this.player.setVelocityY(-100);
           this.boost -= 1;
         }
-        // let the projectiles move out of the weapon
+        // laser logic
         if (this.weaponHold.visible && this.rKey.isDown) {
           this.laser.setPosition(this.weaponHold.x, this.weaponHold.y);
           this.laser.setVelocityX(100);
           this.laser.setVisible(true);
         }
-        if (this.laser.visible && this.laser.body.velocity.x === 0) {
+        if (
+          this.laser.visible &&
+          this.laser.body &&
+          this.laser.body.velocity.x === 0
+        ) {
           this.laser.setVelocityX(300);
         }
 
-        // Stop player movement if no key is pressed
         this.player.setVelocityX(0);
 
-        // Horizontal movement for player
         if (this.cursors.left.isDown) {
           this.player.setVelocityX(-150);
-          setLeftIsClicked(true);
         } else if (this.cursors.right.isDown) {
           this.player.setVelocityX(150);
-          setRightIsClicked(true);
         }
 
-        // Spacebar jump
-        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+        if (this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
           if (this.howManyJumps < this.maxJumps) {
             this.player.setVelocityY(-300);
             this.howManyJumps++;
-            setJumpIsClicked(true);
           }
         }
 
-        // Reset jump count when player touches the ground
-        if (this.player.body.blocked.down) {
+        if (this.player.body && this.player.body.blocked.down) {
           this.howManyJumps = 0;
         }
 
-        // Check for player collision with coins and remove coins
         if (this.manyCoins) {
           this.manyCoins.forEach((coin) => {
             if (this.physics.overlap(this.player, coin)) {
+              this.localCoins += 1;
               setCoins((prevCoins) => prevCoins + 1);
-
               coin.destroy();
             }
           });
         }
-        // check if player has collected 3 coins and if so start level 2 scene
-        if (this.coins === 3) {
-          this.scene.start("Level2");
-        }
+        /// if level 2 is released
+        //  if (this.localCoins === 35) {
+        //  this.scene.start("Level2");
+        //}
 
-        if (gameOver) {
-          // Optional: Game over conditions and restart button visibility
+        if (this.gameOver) {
+          console.log("Game Over!");
           if (this.restartButton) {
             this.restartButton.setVisible(true);
           }
           this.scene.pause();
+          this.physics.world.pause();
         } else {
           if (this.restartButton) {
             this.restartButton.setVisible(false);
@@ -451,241 +543,13 @@ const PhaserGame = () => {
         }
       },
     } as Phaser.Types.Scenes.SettingsConfig;
-    class Level2 extends Phaser.Scene {
-      private background!: Phaser.GameObjects.TileSprite;
-      private star!: Phaser.GameObjects.Image;
-      private manyCoins!: Phaser.GameObjects.Image[];
-      private floor!: Phaser.Physics.Arcade.StaticGroup;
-      private randomFloors!: Phaser.Physics.Arcade.StaticGroup;
-      private flag!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-      private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-      private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-      private spaceKey!: any;
-      private howManyJumps!: number;
-      private maxJumps!: number;
-      private fallinItems!: Phaser.Physics.Arcade.Group;
-
-      constructor() {
-        super({ key: "Level2" });
-      }
-
-      preload() {
-        this.load.image("sky1", "/assets/mapbg/bg_castle.png");
-        this.load.image("player", "/assets/p3_stand.png");
-        this.load.image("floor", "/assets/mapImages/sandMid.png");
-        this.load.image("cactus", "/assets/items/cactus.png");
-        this.load.image("flag", "/assets/items/flagGreen.png");
-        this.load.image("itemOne", "/assets/items/itemOne.png");
-        this.load.image("sky2", "/assets/mapbg/skyy.png");
-        this.load.image("coin", "/assets/items/coinGold.png");
-        this.load.image("star", "/assets/items/star.png");
-        this.load.image("playerBoost", "/assets/p3_jump.png");
-      }
-
-      create() {
-        this.add.text(100, 100, "Level 2", { fill: "#0f0" });
-
-        const lvl2Width = 650;
-        const lvl2Height = 4500;
-
-        const floorLvl2Height = 40;
-
-        // adding event listeners for the buttons to later use the state for color change
-        window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("keyup", handleKeyUp);
-        //creating fallin items
-        // Initialize the falling items group
-        this.fallinItems = this.physics.add.group({
-          key: "itemOne",
-          repeat: 9, // Number of items
-          setXY: { x: 50, y: 0, stepX: 70 },
-        });
-
-        // Configure each falling item
-        this.fallinItems.children.iterate(
-          (item: Phaser.Physics.Arcade.Image) => {
-            item.setScale(0.5);
-            item.setCollideWorldBounds(true);
-            item.body.maxVelocity.y = 200;
-          },
-        );
-
-        // Create a movable background
-        this.background = this.add.tileSprite(
-          0,
-          0,
-          lvl2Width,
-          lvl2Height,
-          "sky1",
-        );
-
-        this.background.setScrollFactor(0);
-        this.background.setOrigin(0, 0);
-        this.background.setDepth(-1);
-
-        // star
-        this.star = this.physics.add.image(500, 4400, "star");
-        (this.star.body as Phaser.Physics.Arcade.Body).allowGravity = false;
-        const starBody = this.star.body as Phaser.Physics.Arcade.Body;
-        starBody.allowGravity = false;
-
-        //coins
-        this.manyCoins = [];
-        for (let i = 0; i < 55; i++) {
-          const x = Phaser.Math.Between(50, lvl2Width);
-          const y = Phaser.Math.Between(50, lvl2Height - 50);
-          const coin = this.physics.add.image(x, y, "coin");
-          coin.setScale(0.5);
-          coin.setCollideWorldBounds(true);
-          coin.body.allowGravity = false;
-          coin.body.immovable = true;
-          coin.collected = false;
-          coin.tencollected = false;
-          this.manyCoins.push(coin);
-        }
-
-        // Set camera bounds to the size of the world
-        this.cameras.main.setBounds(0, 0, lvl2Width, lvl2Height);
-        this.physics.world.setBounds(0, 0, lvl2Width, lvl2Height);
-
-        // Initialize the floor as a StaticGroup
-        this.floor = this.physics.add.staticGroup();
-
-        // Create the ground floor
-        const groundFloor = this.floor
-          .create(0, lvl2Height - floorLvl2Height, "floor")
-          .setOrigin(0, 0);
-        groundFloor.setScale(lvl2Width / groundFloor.width, 1).refreshBody();
-
-        // Create random floating floors
-        this.randomFloors = this.physics.add.staticGroup();
-        for (let i = 0; i < 55; i++) {
-          const x = Phaser.Math.Between(50, lvl2Width);
-          const y = Phaser.Math.Between(50, lvl2Height - 50);
-          const floor = this.randomFloors.create(x, y, "floor");
-          floor.setScale(0.4).refreshBody();
-        }
-
-        // Create flag at the goal line on top in the middle and slightly behind the top
-        this.flag = this.physics.add.sprite(
-          lvl2Width / 2,
-          lvl2Height - 20,
-          "flag",
-        );
-
-        // Create the player at the starting position
-        this.player = this.physics.add.sprite(
-          lvl2Width / 2,
-          lvl2Height - floorLvl2Height - 50,
-          "player",
-        );
-        this.player.setScale(0.5);
-        this.player.setBounce(0.2);
-        this.player.setCollideWorldBounds(true);
-
-        // Follow the player with the camera
-        this.cameras.main.startFollow(this.player);
-
-        // Enable gravity for the player
-        this.player.body.allowGravity = true;
-
-        // Add keyboard inputs for movement
-        if (this.input) {
-          if (this.input && this.input.keyboard) {
-            this.cursors = this.input.keyboard.createCursorKeys();
-          }
-        }
-        this.spaceKey = this.cursors.space;
-
-        // Add colliders between the player and the floors
-        this.physics.add.collider(this.player, this.floor); // Collide with the ground floor
-        this.physics.add.collider(this.player, this.randomFloors); // Collide with the floating floors
-
-        //// Add collider between player and star after some seconds it gets removed
-        this.physics.add.collider(this.player, this.star, () => {
-          this.player.body.allowGravity = false;
-          this.player.setTexture("playerBoost");
-          this.time.delayedCall(5000, () => {
-            this.player.body.allowGravity = true;
-            this.player.setTexture("player");
-          });
-        });
-
-        // Add collider between player and falling items
-        this.physics.add.collider(
-          this.player,
-          this.fallinItems,
-          (player, fallinItems) => {
-            setGameOver(true);
-          },
-        );
-
-        // Initialize jump properties
-        this.howManyJumps = 0;
-        this.maxJumps = 2;
-      }
-      fallinItems(player: any, fallinItems: any, arg2: () => void) {
-        throw new Error("Method not implemented.");
-      }
-
-      update(time, delta) {
-        this.player.setVelocityX(0);
-
-        // creating the star bonus
-
-        if (this.physics.overlap(this.player, this.star)) {
-          //lets the palyer fly up
-        }
-
-        // check collide  between player and falling items and if so gameover
-
-        // Check for player collision with coins and remove coins
-        if (this.manyCoins) {
-          this.manyCoins.forEach((coin) => {
-            if (this.physics.overlap(this.player, coin)) {
-              setCoins((prevCoins) => prevCoins + 1);
-
-              coin.destroy();
-            }
-          });
-        }
-
-        // Player movement
-        if (this.cursors.left.isDown) {
-          this.player.setVelocityX(-150);
-          setLeftIsClicked(true);
-        } else if (this.cursors.right.isDown) {
-          this.player.setVelocityX(150);
-          setRightIsClicked(true);
-        }
-
-        // Jump
-        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-          if (this.howManyJumps < this.maxJumps) {
-            this.player.setVelocityY(-400); // Adjust this value if necessary
-            this.howManyJumps++;
-            setJumpIsClicked(true);
-          }
-        }
-
-        // Reset jump count when player touches the ground
-        if (this.player.body.blocked.down) {
-          this.howManyJumps = 0;
-        }
-
-        // Scroll the background based on the camera's scroll position
-        this.background.tilePositionY = this.cameras.main.scrollY;
-      }
-    }
 
     const config = {
       type: Phaser.AUTO,
       width: 800,
       height: 600,
       parent: "phaser-game-container",
-
-      scene: [Level2],
-
+      scene: [level1],
       physics: {
         default: "arcade",
         arcade: {
@@ -701,8 +565,6 @@ const PhaserGame = () => {
     return () => {
       if (gameInstance) {
         gameInstance.destroy(true);
-
-        setCoins(0);
       }
       // start lv 2 if 10 coins are collected
 
@@ -715,8 +577,9 @@ const PhaserGame = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
       <h1 className="mb-6 text-3xl font-bold md:text-4xl">
-        Game made for fun! Collect 35 coins to get to the next level.
+        Game made for fun! Collect coins to get to the next level.
       </h1>
+      <h2 className="text-red-500">Level 2 coming soon</h2>
       <h2>Get a mushroom to get huge and suck in coins</h2>
 
       <div id="phaser-game-container" className="relative mb-6">
