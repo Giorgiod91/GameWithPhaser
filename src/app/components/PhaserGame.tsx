@@ -576,6 +576,7 @@ const PhaserGame = () => {
     return () => {
       if (gameInstance) {
         gameInstance.destroy(true);
+        setCoins(0);
       }
       // start lv 2 if 10 coins are collected
 
