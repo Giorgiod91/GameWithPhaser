@@ -183,9 +183,11 @@ const PhaserGame = () => {
 
         // Floor
         this.floor = this.physics.add.staticGroup();
-        const floorLVL1 = this.floor
-          .create(0, lvl1Height - floorHeight, "floor")
-          .setOrigin(0, 0);
+        const floorLVL1 = this.floor.create(
+          0,
+          lvl1Height - floorHeight,
+          "floor",
+        ) as Phaser.Physics.Arcade.Image;
         floorLVL1.setScale(lvl1Width / floorLVL1.width, 1);
         floorLVL1.refreshBody();
 

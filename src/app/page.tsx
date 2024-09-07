@@ -6,7 +6,7 @@ const PhaserGame = dynamic(() => import("../app/components/PhaserGame"), {
 });
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center text-white">
+    <main className="flex min-h-screen flex-col text-white">
       <section className="h-screen">
         <PhaserGame />
       </section>
