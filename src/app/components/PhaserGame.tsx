@@ -182,14 +182,12 @@ const PhaserGame = () => {
         this.weapon.setInteractive();
 
         // Floor
-        this.floor =
-          this.physics.add.staticGroup() as Phaser.Physics.Arcade.StaticGroup;
+        this.floor = this.physics.add.staticGroup();
         const floorLVL1 = this.floor
-          .create(0, ((lvl1Height as number) - floorHeight) as number, "floor")
+          .create(0, lvl1Height - floorHeight, "floor")
           .setOrigin(0, 0);
-        floorLVL1
-          .setScale(lvl1Width / floorLVL1.width, 1)
-          .refreshBody() as Phaser.Physics.Arcade.StaticGroup;
+        floorLVL1.setScale(lvl1Width / floorLVL1.width, 1);
+        floorLVL1.refreshBody();
 
         // Springboard
         this.springboard = this.physics.add.image(
@@ -344,9 +342,7 @@ const PhaserGame = () => {
         this.player.setVelocity(0, 0);
 
         // Keyboard inputs
-
-        this.cursors =
-          this.input.keyboard!.createCursorKeys() as Phaser.Types.Input.Keyboard.CursorKeys;
+        this.cursors = this.input.keyboard!.createCursorKeys();
         this.spaceKey = this.cursors!.space;
 
         // Colliders
