@@ -22,8 +22,6 @@ const PhaserGame = () => {
   const lvl1Text = "Collect a Weapon to shoot cactus!";
 
   useEffect(() => {
-    let gameInstance;
-
     // state management for the buttons to change color when clicked and to be able to use the state in the game with an event listener
 
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -105,32 +103,36 @@ const PhaserGame = () => {
       create: function (this: Level1Scene) {
         // Setup keyboard inputs
 
-        this.restartButton = this.add
-          .text(
-            Number(this.sys.game.config.width) / 2,
-            Number(this.sys.game.config.height) / 2,
-            "Restart",
-            {
-              fontSize: "32px",
-              backgroundColor: "#000",
-              padding: { x: 20, y: 10 },
-            },
-          )
-          .setOrigin(0.5)
-          .setVisible(false)
-          .setInteractive();
+        const text = this.add.text(
+          Number(this.sys.game.config.width) / 2,
+          Number(this.sys.game.config.height) / 2,
+          "Restart",
+          {
+            fontSize: "32px",
+            backgroundColor: "#000",
+            padding: { x: 20, y: 10 },
+          },
+        ) as Phaser.GameObjects.Text;
+
+        text.setOrigin(0.5);
+        text.setVisible(false);
+        text.setInteractive();
+        this.restartButton = text;
 
         this.restartButton.on("pointerdown", () => {
           this.scene.restart(); // Restart the current scene
         });
         // Setup keyboard inputs
-        if (this.input && this.input.keyboard) {
-          this.cursors = this.input.keyboard.createCursorKeys();
-          this.spaceKey = this.cursors.space;
+        this.input?.keyboard
+          ? (this.cursors = this.input.keyboard.createCursorKeys())
+          : null;
+        this.spaceKey = this.cursors.space;
+        if (this.input.keyboard) {
           this.rKey = this.input.keyboard.addKey(
             Phaser.Input.Keyboard.KeyCodes.R,
           );
         }
+
         // Event listeners
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
@@ -148,9 +150,9 @@ const PhaserGame = () => {
           lvl1Height,
           "sky",
         );
-        this.background.setOrigin(0, 0);
-        this.background.setScrollFactor(0);
-        this.background.setDisplaySize(
+        this.background?.setOrigin(0, 0);
+        this.background?.setScrollFactor(0);
+        this.background?.setDisplaySize(
           Number(this.sys.game.config.width),
           Number(this.sys.game.config.height),
         );
@@ -159,11 +161,8 @@ const PhaserGame = () => {
         this.laser = this.physics.add.image(0, 0, "laser");
         this.laser.setScale(0.1);
         this.laser.setCollideWorldBounds(true);
-        if (
-          this.laser.body &&
-          !(this.laser.body instanceof Phaser.Physics.Arcade.StaticBody)
-        ) {
-          this.laser.body.allowGravity = false;
+        if (!(this.laser.body instanceof Phaser.Physics.Arcade.StaticBody)) {
+          this.laser.body?.setAllowGravity(false);
         }
 
         (this.laser as Phaser.Physics.Arcade.Image).setVisible(false);
@@ -173,23 +172,28 @@ const PhaserGame = () => {
         this.weapon = this.physics.add.image(weaponX - 100, 500, "weapon");
         this.weapon.setScale(0.1);
         this.weapon.setCollideWorldBounds(true);
+        const laserBody = this.laser.body as Phaser.Physics.Arcade.Body;
         if (
-          this.laser.body &&
-          !(this.laser.body instanceof Phaser.Physics.Arcade.StaticBody)
+          laserBody &&
+          !(laserBody instanceof Phaser.Physics.Arcade.StaticBody)
         ) {
-          this.laser.body.allowGravity = false;
+          laserBody.allowGravity = false;
         }
         this.weapon.setInteractive();
 
         // Floor
         this.floor = this.physics.add.staticGroup();
         const floorLVL1 = this.floor
-          .create(0, lvl1Height - floorHeight, "floor")
+          .create(0, ((lvl1Height as number) - floorHeight) as number, "floor")
           .setOrigin(0, 0);
         floorLVL1.setScale(lvl1Width / floorLVL1.width, 1).refreshBody();
 
         // Springboard
-        this.springboard = this.physics.add.image(50, 500, "springUp");
+        this.springboard = this.physics.add.image(
+          50,
+          500,
+          "springUp",
+        ) as Phaser.Physics.Arcade.Image;
         this.springboard.setScale(0.5);
         this.springboard.setCollideWorldBounds(true);
         if (
@@ -205,7 +209,8 @@ const PhaserGame = () => {
           mushroomX / 2,
           mushroomY,
           "mushroom",
-        ) as Phaser.Physics.Arcade.Image;
+        );
+
         if (
           this.mushroom.body &&
           !(this.mushroom.body instanceof Phaser.Physics.Arcade.StaticBody)
@@ -336,10 +341,10 @@ const PhaserGame = () => {
         this.player.setVelocity(0, 0);
 
         // Keyboard inputs
-        if (this.input && this.input.keyboard && this.spaceKey) {
-          this.cursors = this.input.keyboard.createCursorKeys();
-          this.spaceKey = this.cursors.space;
-        }
+
+        this.cursors =
+          this.input.keyboard?.createCursorKeys() as Phaser.Types.Input.Keyboard.CursorKeys;
+        this.spaceKey = this.cursors?.space;
 
         // Colliders
         this.physics.add.collider(this.player, this.weapon, () => {
@@ -385,11 +390,8 @@ const PhaserGame = () => {
         // Collide between cache and floor
         this.physics.add.collider(this.manyCactus, this.floor);
       },
-      update: function (
-        this: Level1Scene,
-        lvl1Width: number,
-        lvl1Height: number,
-      ) {
+
+      update(this: Level1Scene) {
         // cactus movement
         this.manyCactus = this.manyCactus.filter((cactus) => {
           if (cactus && cactus.active) {
@@ -473,7 +475,7 @@ const PhaserGame = () => {
           !this.switchActivated
         ) {
           this.manyBox.forEach((box) => {
-            box.x = Phaser.Math.Between(50, lvl1Width);
+            box.x = Phaser.Math.Between(50, 800);
             this.switchActivated = true;
           });
         }
@@ -560,7 +562,7 @@ const PhaserGame = () => {
       },
     };
 
-    gameInstance = new Phaser.Game(config);
+    const gameInstance = new Phaser.Game(config);
 
     return () => {
       if (gameInstance) {
@@ -603,6 +605,10 @@ const PhaserGame = () => {
           <h1 className="text-2xl font-medium text-gray-300">
             Game is Running
           </h1>
+          <h2> How to move</h2>
+          <h3>Left: Arrow Left</h3>
+          <h3>Right: Arrow Right</h3>
+          <h3>Jump: Space</h3>
 
           <div className="mt-4 flex flex-col items-center">
             <div className="flex flex-row space-x-5 p-4">
