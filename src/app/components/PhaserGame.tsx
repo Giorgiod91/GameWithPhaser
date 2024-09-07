@@ -173,6 +173,12 @@ const PhaserGame = () => {
         this.weapon = this.physics.add.image(weaponX - 100, 500, "weapon");
         this.weapon.setScale(0.1);
         this.weapon.setCollideWorldBounds(true);
+        if (this.weapon.body) {
+          if (this.weapon.body instanceof Phaser.Physics.Arcade.Body) {
+            this.weapon.body.setAllowGravity(false);
+          }
+        }
+
         const laserBody = this.laser.body as Phaser.Physics.Arcade.Body;
         if (
           laserBody &&
@@ -186,11 +192,10 @@ const PhaserGame = () => {
         this.floor = this.physics.add.staticGroup();
         const floorLVL1 = this.floor.create(
           0,
-          lvl1Height - floorHeight,
+          lvl1Height - floorHeight + 40,
           "floor",
         ) as Phaser.Physics.Arcade.Image;
-        floorLVL1.setScale(lvl1Width / floorLVL1.width, 1);
-        floorLVL1.refreshBody();
+        floorLVL1.setScale(lvl1Width / 20, 1).refreshBody();
 
         // Springboard
         this.springboard = this.physics.add.image(
@@ -581,7 +586,7 @@ const PhaserGame = () => {
   }, [gameOver]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#FFE5CF] text-black">
       <h1 className="mb-6 text-3xl font-bold md:text-4xl">
         Game made for fun! Collect coins to get to the next level.
       </h1>
@@ -589,7 +594,7 @@ const PhaserGame = () => {
       <h2>Get a mushroom to get huge and suck in coins</h2>
 
       <div id="phaser-game-container" className="relative mb-6">
-        <h1 className="mb-2 text-3xl font-bold text-yellow-400 md:text-4xl">
+        <h1 className="mb-2 text-3xl font-bold text-black md:text-4xl">
           Coins: {coins}
         </h1>
       </div>
@@ -599,45 +604,38 @@ const PhaserGame = () => {
           <h1 className="mb-4 text-4xl font-bold text-red-500">Game Over</h1>
           <button
             onClick={() => setGameOver(false)}
-            className="rounded-lg bg-blue-500 px-6 py-2 font-semibold text-white shadow-md transition duration-300 hover:bg-blue-600"
+            className="rounded-lg bg-[#FF885B] px-6 py-2 font-semibold text-white shadow-md transition duration-300 hover:bg-[#FF885B]/20"
           >
             Try Again
           </button>
         </div>
       ) : (
         <div className="flex flex-col items-center">
-          <h1 className="text-2xl font-medium text-gray-300">
-            Game is Running
-          </h1>
-          <h2> How to move</h2>
-          <h3>Left: Arrow Left</h3>
-          <h3>Right: Arrow Right</h3>
-          <h3>Jump: Space</h3>
+          <h2 className="text-sm md:text-base">How to move</h2>
+          <h3 className="text-xs md:text-sm">Left: Arrow Left</h3>
+          <h3 className="text-xs md:text-sm">Right: Arrow Right</h3>
+          <h3 className="text-xs md:text-sm">Jump: Space</h3>
 
           <div className="mt-4 flex flex-col items-center">
-            <div className="flex flex-row space-x-5 p-4">
+            <div className="flex flex-row space-x-2 p-2">
               <button
-                className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
-                  leftIsClicked
-                    ? "bg-green-500"
-                    : "bg-blue-500 hover:bg-blue-600"
+                className={`rounded-lg px-4 py-1 text-xs font-semibold text-white shadow-md transition duration-300 ${
+                  leftIsClicked ? "" : "bg-[#FF885B] hover:bg-[#FF885B]/20"
                 }`}
               >
                 <ImArrowLeft />
               </button>
               <button
-                className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
-                  rightIsClicked
-                    ? "bg-green-500"
-                    : "bg-blue-500 hover:bg-blue-600"
+                className={`rounded-lg px-4 py-1 text-xs font-semibold text-white shadow-md transition duration-300 ${
+                  rightIsClicked ? "" : "bg-[#FF885B] hover:bg-[#FF885B]/20"
                 }`}
               >
                 <ImArrowRight />
               </button>
             </div>
             <button
-              className={`rounded-lg px-6 py-2 font-semibold text-white shadow-md transition duration-300 ${
-                jumpIsClicked ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
+              className={`rounded-lg px-4 py-1 text-xs font-semibold text-white shadow-md transition duration-300 ${
+                jumpIsClicked ? "" : "bg-[#FF885B] hover:bg-[#FF885B]/20"
               }`}
             >
               <ImArrowUp />
