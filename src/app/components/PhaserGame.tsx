@@ -112,7 +112,7 @@ const PhaserGame = () => {
             backgroundColor: "#000",
             padding: { x: 20, y: 10 },
           },
-        ) as Phaser.GameObjects.Text;
+        );
 
         text.setOrigin(0.5);
         text.setVisible(false);
@@ -165,7 +165,7 @@ const PhaserGame = () => {
           this.laser.body?.setAllowGravity(false);
         }
 
-        (this.laser as Phaser.Physics.Arcade.Image).setVisible(false);
+        this.laser.setVisible(false);
 
         // Weapon
         const weaponX = Phaser.Math.Between(50, lvl1Width);
@@ -182,11 +182,14 @@ const PhaserGame = () => {
         this.weapon.setInteractive();
 
         // Floor
-        this.floor = this.physics.add.staticGroup();
+        this.floor =
+          this.physics.add.staticGroup() as Phaser.Physics.Arcade.StaticGroup;
         const floorLVL1 = this.floor
           .create(0, ((lvl1Height as number) - floorHeight) as number, "floor")
           .setOrigin(0, 0);
-        floorLVL1.setScale(lvl1Width / floorLVL1.width, 1).refreshBody();
+        floorLVL1
+          .setScale(lvl1Width / floorLVL1.width, 1)
+          .refreshBody() as Phaser.Physics.Arcade.StaticGroup;
 
         // Springboard
         this.springboard = this.physics.add.image(
@@ -343,8 +346,8 @@ const PhaserGame = () => {
         // Keyboard inputs
 
         this.cursors =
-          this.input.keyboard?.createCursorKeys() as Phaser.Types.Input.Keyboard.CursorKeys;
-        this.spaceKey = this.cursors?.space;
+          this.input.keyboard!.createCursorKeys() as Phaser.Types.Input.Keyboard.CursorKeys;
+        this.spaceKey = this.cursors!.space;
 
         // Colliders
         this.physics.add.collider(this.player, this.weapon, () => {
@@ -394,7 +397,7 @@ const PhaserGame = () => {
       update(this: Level1Scene) {
         // cactus movement
         this.manyCactus = this.manyCactus.filter((cactus) => {
-          if (cactus && cactus.active) {
+          if (cactus?.active) {
             cactus.setVelocityX(-100);
             if (cactus.x < 50) {
               cactus.x = 800;
@@ -513,7 +516,7 @@ const PhaserGame = () => {
           }
         }
 
-        if (this.player.body && this.player.body.blocked.down) {
+        if (this.player.body?.blocked.down) {
           this.howManyJumps = 0;
         }
 
