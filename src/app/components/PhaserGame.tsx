@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Phaser, { AUTO } from "phaser";
+
 import { ImArrowLeft, ImArrowRight, ImArrowUp } from "react-icons/im";
 import { object, set } from "zod";
 
@@ -344,8 +345,10 @@ const PhaserGame = () => {
         this.player.setVelocity(0, 0);
 
         // Keyboard inputs
-        this.cursors = this.input.keyboard!.createCursorKeys();
-        this.spaceKey = this.cursors!.space;
+        if (this.input.keyboard) {
+          this.cursors = this.input.keyboard.createCursorKeys();
+          this.spaceKey = this.cursors.space;
+        }
 
         // Colliders
         this.physics.add.collider(this.player, this.weapon, () => {
