@@ -592,6 +592,7 @@ const PhaserGame = () => {
       </h1>
       <h2 className="text-red-500">Level 2 coming soon</h2>
       <h2>Get a mushroom to get huge and suck in coins</h2>
+      <h3>press the button R to shoot if u have a weapon</h3>
 
       <div id="phaser-game-container" className="relative mb-6">
         <h1 className="mb-2 text-3xl font-bold text-black md:text-4xl">
